@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
 google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
-geheime_code = "OT03GentPlanning"
+geheime_code = "OTGentPlanning"
 
 # ====== Toegang controleren ======
 query_params = st.query_params
