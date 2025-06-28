@@ -4,15 +4,23 @@ import pandas as pd
 import requests
 from datetime import datetime
 import matplotlib.pyplot as plt
+import hashlib
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
 google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
-geheime_code = "OTGentPlanning"
+wachtwoord_admin = "OTGentPlanning"
 
-# ====== Toegang controleren via query parameter ======
-query_params = st.query_params
-is_admin = query_params.get("admin_toegang", [""]) == geheime_code
+# ====== Functie voor wachtwoordhashing ======
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+# ====== Toegang controleren via wachtwoord (veiliger dan query param) ======
+is_admin = False
+st.sidebar.header("🔐 Admin login")
+password_input = st.sidebar.text_input("Admin wachtwoord", type="password")
+if hash_password(password_input) == hash_password(wachtwoord_admin):
+    is_admin = True
 
 # ====== ADMINPAGINA ======
 if is_admin:
@@ -60,8 +68,9 @@ if is_admin:
             telling = pd.Series([v.strip() for v in alle_voorkeuren if v.strip()]).value_counts()
 
             fig, ax = plt.subplots()
-            telling.head(15).plot(kind="barh", ax=ax)
+            telling.head(15).plot(kind="barh", ax=ax, edgecolor="black")
             ax.invert_yaxis()
+            ax.set_title("Top 15 Populairste Diensten")
             ax.set_xlabel("Aantal voorkeuren")
             ax.set_ylabel("Dienst")
             st.pyplot(fig)
@@ -139,6 +148,8 @@ else:
     ]
     geselecteerd = st.multiselect("Selecteer één of meerdere diensten:", diensten, default=eerder_voorkeuren)
     volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_voorkeuren
+    if set(volgorde) != set(geselecteerd):
+        volgorde = geselecteerd
 
     if geselecteerd:
         st.subheader("Jouw voorkeursvolgorde:")
@@ -150,27 +161,6 @@ else:
     bevestigd = st.checkbox(
         "Ik bevestig dat mijn voorkeur correct is ingevuld. Bij wijzigingen in de planning mag ik automatisch ingepland worden op basis van mijn plaatsvoorkeur binnen deze rol(len)."
     )
-
-    st.markdown("""
-        <style>
-        div.stButton > button {
-            background-color: #DAA520;
-            color: white;
-            font-weight: bold;
-            width: 100%%;
-            padding: 0.75em;
-            border-radius: 5px;
-            position: fixed;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            margin-left: auto;
-            margin-right: auto;
-            max-width: 400px;
-            z-index: 9999;
-        }
-        </style>
-    """, unsafe_allow_html=True)
 
     if st.button("Verzend je antwoorden"):
         if not bevestigd:
@@ -187,7 +177,7 @@ else:
                 "Naam": naam,
                 "Teamcoach": teamcoach,
                 "Voorkeuren": ", ".join(volgorde),
-                "Bevestiging plaatsvoorkeur": "Ja",
+                "Bevestiging plaatsvoorkeur": "True" if bevestigd else "False",
                 "Ingevuld op": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
             }
 
