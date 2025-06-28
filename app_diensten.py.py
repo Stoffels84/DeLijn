@@ -12,7 +12,7 @@ geheime_code = "OTGentPlanning"
 
 # ====== Toegang controleren via query parameter ======
 query_params = st.query_params
-is_admin = query_params.get("admin_toegang", [""])[0] == geheime_code
+is_admin = query_params.get("admin_toegang", [""]) == geheime_code
 
 # ====== ADMINPAGINA ======
 if is_admin:
