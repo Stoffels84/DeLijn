@@ -5,7 +5,7 @@ import requests
 from datetime import datetime
 
 # ====== Configuratie: SheetDB API en Google Sheet ======
-sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"  # ← SheetDB-link
+sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
 google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
 
 # ====== Personeelslijst ophalen en kolomnamen normaliseren ======
@@ -15,27 +15,31 @@ df_personeel.columns = df_personeel.columns.str.strip().str.lower()
 # ====== Titel ======
 st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-# ====== Vul je personeelsnummer in ======
+# ====== Vraag 1: Personeelsnummer ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 1: Personeelsnummer</h2>", unsafe_allow_html=True)
 personeelsnummer = st.text_input(label="", placeholder="Vul hier je personeelsnummer in", key="personeelsnummer").strip()
 
 # ====== Automatisch naam + teamcoach ophalen uit lijst ======
 naam_gevonden = ""
 coach_gevonden = ""
+match = pd.DataFrame()
 
 if personeelsnummer:
-    match = df_personeel[df_personeel["personeelsnummer"] == personeelsnummer]
-    if not match.empty:
-        naam_gevonden = match.iloc[0]["naam"]
-        coach_gevonden = match.iloc[0]["teamcoach"]
+    if not personeelsnummer.isdigit():
+        st.warning("⚠️ Het personeelsnummer moet enkel cijfers bevatten.")
     else:
-        st.warning("⚠️ Personeelsnummer niet gevonden in de personeelslijst.")
+        match = df_personeel[df_personeel["personeelsnummer"] == personeelsnummer]
+        if not match.empty:
+            naam_gevonden = match.iloc[0]["naam"]
+            coach_gevonden = match.iloc[0]["teamcoach"]
+        else:
+            st.warning("⚠️ Personeelsnummer niet gevonden in de personeelslijst.")
 
 # ====== Eerdere gegevens ophalen uit SheetDB ======
 bestaande_data = None
 eerder_voorkeuren = []
 
-if personeelsnummer:
+if personeelsnummer and match is not None and not match.empty:
     try:
         response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
         response_check.raise_for_status()
@@ -43,21 +47,21 @@ if personeelsnummer:
         if gevonden:
             bestaande_data = gevonden[0]
             st.info("We hebben eerder ingevulde gegevens gevonden. Je kan ze nu bewerken.")
-            eerder_voorkeuren = [v for v in bestaande_data.get("Voorkeuren", "").split(", ") if v]
+            voorkeur_string = bestaande_data.get("Voorkeuren", "")
+            eerder_voorkeuren = [v.strip() for v in voorkeur_string.split(",") if v.strip()]
     except requests.RequestException as e:
         st.error(f"❌ Fout bij ophalen van gegevens uit SheetDB: {e}")
 
-# ====== Je naam ======
+# ====== Naam en Teamcoach ======
 st.markdown("<h3 style='color: #DAA520;'>Jouw naam</h3>", unsafe_allow_html=True)
 naam = st.text_input(label="", value=naam_gevonden or (bestaande_data.get("Naam") if bestaande_data else ""), 
                      placeholder="Naam wordt automatisch ingevuld", disabled=bool(naam_gevonden), key="naam").strip()
 
-# ====== Je teamcoach? ======
 st.markdown("<h3 style='color: #DAA520;'>Jouw teamcoach</h3>", unsafe_allow_html=True)
 teamcoach = st.text_input(label="", value=coach_gevonden or (bestaande_data.get("Teamcoach") if bestaande_data else ""), 
                           placeholder="Teamcoach wordt automatisch ingevuld", disabled=bool(coach_gevonden), key="coach").strip()
 
-# ====== Voor welke roosters stel je u kandidaat? ======
+# ====== Dienstvoorkeuren ======
 st.markdown("<h3 style='color: #DAA520;'>Voor welke roosters stel je u kandidaat?</h3>", unsafe_allow_html=True)
 diensten = [
     "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
@@ -71,7 +75,9 @@ diensten = [
     "BO15 (Onderbroken Diensten Bus)", "TO15 (Onderbroken Diensten Tram)", "MW12 (Bustrammix Weekendrol)"
 ]
 geselecteerd = st.multiselect("Selecteer één of meerdere diensten:", diensten, default=eerder_voorkeuren)
-volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else []
+
+# → Robuuste fallback voor volgorde
+volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_voorkeuren
 
 if geselecteerd:
     st.subheader("Jouw voorkeursvolgorde:")
@@ -80,7 +86,7 @@ if geselecteerd:
 else:
     st.info("Selecteer eerst één of meerdere diensten om verder te gaan.")
 
-# ====== Bevestig of je gegevens correct zijn ======
+# ====== Bevestiging aanvinken ======
 bevestigd = st.checkbox(
     "Ik bevestig dat mijn voorkeur correct is ingevuld. Bij wijzigingen in de planning mag ik automatisch ingepland worden op basis van mijn plaatsvoorkeur binnen deze rol(len)."
 )
@@ -115,6 +121,8 @@ if st.button("Verzend je antwoorden"):
         st.error("Gelieve alle verplichte velden in te vullen.")
     elif not personeelsnummer.isdigit():
         st.error("Het personeelsnummer moet enkel cijfers bevatten.")
+    elif match.empty:
+        st.error("⚠️ Personeelsnummer komt niet voor in de personeelslijst.")
     else:
         resultaat = {
             "Personeelsnummer": personeelsnummer,
