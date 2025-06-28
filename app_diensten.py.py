@@ -28,31 +28,36 @@ if personeelsnummer:
     if not match.empty:
         naam_gevonden = match.iloc[0]["naam"]
         coach_gevonden = match.iloc[0]["teamcoach"]
+    else:
+        st.warning("⚠️ Personeelsnummer niet gevonden in de personeelslijst.")
 
 # ====== Eerdere gegevens ophalen uit SheetDB ======
 bestaande_data = None
 eerder_voorkeuren = []
 
 if personeelsnummer:
-    response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
-    if response_check.status_code == 200:
+    try:
+        response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
+        response_check.raise_for_status()
         gevonden = response_check.json()
         if gevonden:
             bestaande_data = gevonden[0]
             st.info("We hebben eerder ingevulde gegevens gevonden. Je kan ze nu bewerken.")
-            eerder_voorkeuren = bestaande_data.get("Voorkeuren", "").split(", ")
+            eerder_voorkeuren = [v for v in bestaande_data.get("Voorkeuren", "").split(", ") if v]
+    except requests.RequestException as e:
+        st.error(f"❌ Fout bij ophalen van gegevens uit SheetDB: {e}")
 
 # ====== Je naam ======
 st.markdown("<h3 style='color: #DAA520;'>Jouw naam</h3>", unsafe_allow_html=True)
 naam = st.text_input(label="", value=naam_gevonden or (bestaande_data.get("Naam") if bestaande_data else ""), 
-                     placeholder="Naam wordt automatisch ingevuld", disabled=bool(naam_gevonden), key="naam")
+                     placeholder="Naam wordt automatisch ingevuld", disabled=bool(naam_gevonden), key="naam").strip()
 
 # ====== Je teamcoach? ======
-st.markdown("<h3 style='color: #DAA520;'>Jouw teamcoach</32>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #DAA520;'>Jouw teamcoach</h3>", unsafe_allow_html=True)
 teamcoach = st.text_input(label="", value=coach_gevonden or (bestaande_data.get("Teamcoach") if bestaande_data else ""), 
-                          placeholder="Teamcoach wordt automatisch ingevuld", disabled=bool(coach_gevonden), key="coach")
+                          placeholder="Teamcoach wordt automatisch ingevuld", disabled=bool(coach_gevonden), key="coach").strip()
 
-# ====== voor welke roosters stel je u kandidaat? ======
+# ====== Voor welke roosters stel je u kandidaat? ======
 st.markdown("<h3 style='color: #DAA520;'>Voor welke roosters stel je u kandidaat?</h3>", unsafe_allow_html=True)
 diensten = [
     "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
@@ -121,14 +126,16 @@ if st.button("Verzend je antwoorden"):
         }
 
         with st.spinner("Gegevens worden verwerkt..."):
-            if bestaande_data:
-                response = requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
-            else:
-                response = requests.post(sheetdb_url, json={"data": resultaat})
+            try:
+                if bestaande_data:
+                    response = requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
+                else:
+                    response = requests.post(sheetdb_url, json={"data": resultaat})
+                response.raise_for_status()
 
-        if response.status_code in [200, 201]:
-            st.success(f"Bedankt {naam}, je voorkeuren werden opgeslagen via SheetDB!")
-            with st.expander("Bekijk je ingediende gegevens"):
-                st.json(resultaat)
-        else:
-            st.error("Er ging iets mis bij het verzenden naar SheetDB.")
+                st.success(f"Bedankt {naam}, je voorkeuren werden opgeslagen via SheetDB!")
+                with st.expander("Bekijk je ingediende gegevens"):
+                    st.json(resultaat)
+
+            except requests.RequestException as e:
+                st.error(f"❌ Er ging iets mis bij het verzenden naar SheetDB: {e}")
