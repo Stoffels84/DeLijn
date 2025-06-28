@@ -5,24 +5,66 @@ import requests
 from datetime import datetime
 import matplotlib.pyplot as plt
 import hashlib
+import smtplib
+from email.mime.text import MIMEText
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
 google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
 wachtwoord_admin = "OTGentPlanning"
 
+smtp_server = "smtp.gmail.com"
+smtp_port = 587
+smtp_user = "no.reply.de.lijn.9050@gmail.com"
+smtp_password = "btsz olze cgdh kygp"
+ontvanger_email = "29076@delijn.be"  # fallback
+
 # ====== Functie voor wachtwoordhashing ======
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-# ====== Toegang controleren via wachtwoord ======
+# ====== Functie om e-mail te verzenden ======
+def verzend_email(naam, personeelsnummer, teamcoach, voorkeuren, timestamp):
+    coach_emails = {
+        "Lien": "lien@delijn.be",
+        "Bart": "bart@delijn.be",
+        "Sofie": "sofie@delijn.be",
+        "Tom": "tom@delijn.be",
+        # Voeg meer teamcoaches toe indien nodig
+    }
+    ontvanger = coach_emails.get(teamcoach, ontvanger_email)
+    onderwerp = f"Nieuwe dienstvoorkeur van {naam}"
+    inhoud = f"""
+Naam: {naam}
+Personeelsnummer: {personeelsnummer}
+Teamcoach: {teamcoach}
+
+Voorkeursvolgorde:
+{chr(10).join(f"{i+1}. {v}" for i, v in enumerate(voorkeuren))}
+
+Ingevuld op: {timestamp}
+"""
+    msg = MIMEText(inhoud)
+    msg["Subject"] = onderwerp
+    msg["From"] = smtp_user
+    msg["To"] = ontvanger
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+    except Exception as e:
+        st.warning(f"📧 Kon geen e-mail verzenden: {e}")
+
+# ====== Admin login ======
 is_admin = False
 st.sidebar.header("🔐 Admin login")
 password_input = st.sidebar.text_input("Admin wachtwoord", type="password")
 if hash_password(password_input) == hash_password(wachtwoord_admin):
     is_admin = True
 
-# ====== CSS voor mobiele optimalisatie ======
+# ====== CSS ======
 st.markdown("""
     <style>
     .block-container {padding-left: 1rem !important; padding-right: 1rem !important;}
@@ -33,10 +75,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ====== ADMINPAGINA ======
+# ====== ADMIN ======
 if is_admin:
     st.markdown("<h1 style='color: #DAA520;'>🔐 Adminoverzicht: Dienstvoorkeuren</h1>", unsafe_allow_html=True)
-
     try:
         response = requests.get(sheetdb_url)
         response.raise_for_status()
@@ -50,7 +91,7 @@ if is_admin:
             coaches = sorted(df["Teamcoach"].dropna().unique())
             gekozen_coach = st.sidebar.multiselect("Filter op teamcoach", coaches, default=coaches)
             zoeknummer = st.sidebar.text_input("Zoek op personeelsnummer")
-            alle_voorkeuren = df["Voorkeuren"].dropna().str.cat(sep=", ").split(",")
+            alle_voorkeuren = df["Voorkeuren"].dropna().str.cat(sep=",").split(",")
             diensten_uniek = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
             gekozen_diensten = st.sidebar.multiselect("Filter op dienst", diensten_uniek)
 
@@ -79,7 +120,6 @@ if is_admin:
 
         else:
             st.info("Er zijn nog geen inzendingen.")
-
     except Exception as e:
         st.error(f"❌ Fout bij ophalen gegevens: {e}")
 
@@ -89,8 +129,9 @@ else:
     df_personeel = pd.read_csv(google_sheet_url, dtype=str)
     df_personeel.columns = df_personeel.columns.str.strip().str.lower()
 
-    personeelsnummer = st.text_input("Personeelsnummer", label_visibility="collapsed", placeholder="Vul je personeelsnummer in").strip()
+    personeelsnummer = st.text_input("Personeelsnummer", placeholder="Vul je personeelsnummer in").strip()
     persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", max_chars=4).strip()
+
     naam_gevonden = ""
     coach_gevonden = ""
     match = pd.DataFrame()
@@ -99,7 +140,10 @@ else:
         if not personeelsnummer.isdigit():
             st.warning("⚠️ Het personeelsnummer moet enkel cijfers bevatten.")
         else:
-            match = df_personeel[(df_personeel["personeelsnummer"] == personeelsnummer) & (df_personeel["controle"] == persoonlijke_code)]
+            match = df_personeel[
+                (df_personeel["personeelsnummer"] == personeelsnummer) &
+                (df_personeel["controle"] == persoonlijke_code)
+            ]
             if not match.empty:
                 naam_gevonden = match.iloc[0]["naam"]
                 coach_gevonden = match.iloc[0]["teamcoach"]
@@ -136,8 +180,6 @@ else:
         naam = st.text_input("Naam", value=naam_gevonden or bestaande_data.get("Naam", "") if bestaande_data else "").strip()
         teamcoach = st.text_input("Teamcoach", value=coach_gevonden or bestaande_data.get("Teamcoach", "") if bestaande_data else "").strip()
 
-    st.markdown("<h3 style='color: #DAA520;'>Voor welke roosters stel je u kandidaat?</h3>", unsafe_allow_html=True)
-
     with st.expander("📋 Jouw dienstvoorkeuren"):
         diensten = [
             "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
@@ -160,7 +202,7 @@ else:
         for i, item in enumerate(volgorde, 1):
             st.write(f"{i}. {item}")
     else:
-        st.info("Selecteer eerst een of meer diensten.")
+        st.info("Selecteer eerst één of meerdere diensten.")
 
     with st.expander("✅ Bevestiging"):
         bevestigd = st.checkbox("Ik bevestig mijn voorkeur en ga akkoord met automatische toewijzing bij wijzigingen.")
@@ -188,6 +230,7 @@ else:
                         response = requests.post(sheetdb_url, json={"data": resultaat})
                     response.raise_for_status()
                     st.success(f"Bedankt {naam}, je voorkeuren zijn opgeslagen!")
+                    verzend_email(naam, personeelsnummer, teamcoach, volgorde, resultaat["Laatste aanpassing"])
                     with st.expander("Bekijk je ingediende gegevens"):
                         st.json(resultaat)
             except Exception as e:
