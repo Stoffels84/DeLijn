@@ -90,23 +90,24 @@ else:
     df_personeel.columns = df_personeel.columns.str.strip().str.lower()
 
     personeelsnummer = st.text_input("Personeelsnummer", label_visibility="collapsed", placeholder="Vul je personeelsnummer in").strip()
+    persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", max_chars=4).strip()
     naam_gevonden = ""
     coach_gevonden = ""
     match = pd.DataFrame()
 
-    if personeelsnummer:
+    if personeelsnummer and persoonlijke_code:
         if not personeelsnummer.isdigit():
             st.warning("⚠️ Het personeelsnummer moet enkel cijfers bevatten.")
         else:
-            match = df_personeel[df_personeel["personeelsnummer"] == personeelsnummer]
+            match = df_personeel[(df_personeel["personeelsnummer"] == personeelsnummer) & (df_personeel["controle"] == persoonlijke_code)]
             if not match.empty:
                 naam_gevonden = match.iloc[0]["naam"]
                 coach_gevonden = match.iloc[0]["teamcoach"]
                 st.success(f"👋 Welkom terug, **{naam_gevonden}**!")
             else:
-                st.warning("⚠️ Personeelsnummer niet gevonden.")
+                st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
 
-    if not personeelsnummer or not personeelsnummer.isdigit() or match.empty:
+    if not personeelsnummer or not persoonlijke_code or not personeelsnummer.isdigit() or match.empty:
         st.stop()
 
     st.markdown(f"""
