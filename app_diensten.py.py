@@ -43,17 +43,17 @@ if personeelsnummer:
             eerder_voorkeuren = bestaande_data.get("Voorkeuren", "").split(", ")
 
 # ====== Je naam ======
-st.markdown("<h3 style='color: #DAA520;'>Vraag 2: Naam en voornaam</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #DAA520;'>Jouw naam</h3>", unsafe_allow_html=True)
 naam = st.text_input(label="", value=naam_gevonden or (bestaande_data.get("Naam") if bestaande_data else ""), 
                      placeholder="Naam wordt automatisch ingevuld", disabled=bool(naam_gevonden), key="naam")
 
 # ====== Je teamcoach? ======
-st.markdown("<h3 style='color: #DAA520;'>Vraag 3: Wie is jouw teamcoach?</32>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #DAA520;'>Jouw teamcoach</32>", unsafe_allow_html=True)
 teamcoach = st.text_input(label="", value=coach_gevonden or (bestaande_data.get("Teamcoach") if bestaande_data else ""), 
                           placeholder="Teamcoach wordt automatisch ingevuld", disabled=bool(coach_gevonden), key="coach")
 
 # ====== voor welke roosters stel je u kandidaat? ======
-st.markdown("<h2 style='color: #DAA520;'>Vraag 4: Kies je gewenste diensten</h2>", unsafe_allow_html=True)
+st.markdown("<h3 style='color: #DAA520;'>Voor welke roosters stel je u kandidaat?</h3>", unsafe_allow_html=True)
 diensten = [
     "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
     "G09 (Gelede Bus 9 & 11 Laat-Vroeg)", "GW09 (Gelede Bus 9 & 11 Week-Week)", "B24 (Busmix Laat-Vroeg)",
