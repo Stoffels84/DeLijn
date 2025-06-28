@@ -104,7 +104,7 @@ if not is_admin:
     persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", max_chars=4).strip()
 
     if not all([personeelsnummer.isdigit(), persoonlijke_code.isdigit(), len(persoonlijke_code) == 4]):
-        st.warning("⚠️ Zorg dat je personeelsnummer en code correct zijn ingevuld (code = 4 cijfers).")
+        st.warning("⚠️ Zorg dat je personeelsnummer en code correct zijn ingevuld (code = 4 laatste cijfers rijksregisternummer).")
         st.stop()
 
     match = df_personeel[(df_personeel["personeelsnummer"] == personeelsnummer) &
