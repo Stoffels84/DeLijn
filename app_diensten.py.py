@@ -1,14 +1,14 @@
 import streamlit as st
 from streamlit_sortables import sort_items
 import pandas as pd
-import os
+import requests
 from datetime import datetime
 
 # Titel
-st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrooster</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
 # Vraag 1: Selectie
-st.markdown("<h2 style='color: #DAA520;'>Vraag 1: Kies je gewenste rooster</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='color: #DAA520;'>Vraag 1: Kies je gewenste diensten</h2>", unsafe_allow_html=True)
 diensten = [
     "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
     "G09 (Gelede Bus 9 & 11 Laat-Vroeg)", "GW09 (Gelede Bus 9 & 11 Week-Week)", "B24 (Busmix Laat-Vroeg)",
@@ -22,7 +22,7 @@ diensten = [
 ]
 geselecteerd = st.multiselect("Selecteer één of meerdere diensten:", diensten)
 
-# Vraag 2: Rangschikking met drag & drop
+# Vraag 2: Rangschikking
 st.markdown("<h2 style='color: #DAA520;'>Vraag 2: Rangschik je voorkeuren (versleep de items)</h2>", unsafe_allow_html=True)
 volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else []
 
@@ -35,20 +35,20 @@ else:
 
 # Vraag 3: Personeelsnummer
 st.markdown("<h2 style='color: #DAA520;'>Vraag 3: Personeelsnummer</h2>", unsafe_allow_html=True)
-personeelsnummer = st.text_input("Personeelsnummer", key="personeelsnummer")
+personeelsnummer = st.text_input(label="", placeholder="Vul hier je personeelsnummer in", key="personeelsnummer")
 
 # Vraag 4: Naam en voornaam
 st.markdown("<h2 style='color: #DAA520;'>Vraag 4: Naam en voornaam</h2>", unsafe_allow_html=True)
-naam = st.text_input("Naam en voornaam", key="naam")
+naam = st.text_input(label="", placeholder="Vul hier je naam en voornaam in", key="naam")
 
-# Vraag 5: Teamcoach kiezen
+# Vraag 5: Teamcoach
 st.markdown("<h2 style='color: #DAA520;'>Vraag 5: Wie is jouw teamcoach?</h2>", unsafe_allow_html=True)
 teamcoach = st.radio("Selecteer je teamcoach:", [
     "Christoff Rotty", "Steven Storm", "Dominique De Clercq", "Els Dewulf",
     "Lucie Van De Velde", "Els Vanhoe", "Kenneth De Rick", "Bart Van Der Beken"
 ])
 
-# Verzenden en opslaan
+# Verzenden
 st.markdown("""
     <style>
     div.stButton > button {
@@ -73,6 +73,8 @@ st.markdown("""
 if st.button("Verzend je antwoorden"):
     if not personeelsnummer or not naam or not volgorde:
         st.error("Gelieve alle verplichte velden in te vullen.")
+    elif not personeelsnummer.isdigit():
+        st.error("Het personeelsnummer moet enkel cijfers bevatten.")
     else:
         resultaat = {
             "Personeelsnummer": personeelsnummer,
@@ -81,29 +83,17 @@ if st.button("Verzend je antwoorden"):
             "Voorkeuren": ", ".join(volgorde),
             "Ingevuld op": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         }
-        df = pd.DataFrame([resultaat])
 
-        bestand = "voorkeuren_resultaten.xlsx"
-        if os.path.exists(bestand):
-            bestaande_df = pd.read_excel(bestand)
-            bestaande_df = bestaande_df[bestaande_df["Personeelsnummer"] != personeelsnummer]
-            df = pd.concat([bestaande_df, df], ignore_index=True)
-        df.to_excel(bestand, index=False)
+        # ⬇️ SheetDB: API-verzending
+        sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"  # <-- VERVANG DOOR JOUW ECHTE URL
+        data = {"data": resultaat}
+        response = requests.post(sheetdb_url, json=data)
 
-        st.success("Je antwoorden zijn succesvol opgeslagen!")
+        if response.status_code == 201:
+            st.success(f"Bedankt {naam}, je voorkeuren werden opgeslagen via SheetDB!")
+            with st.expander("Bekijk je ingediende gegevens"):
+                st.json(resultaat)
+        else:
+            st.error("Er ging iets mis bij het verzenden naar SheetDB.")
 
-# Downloadgedeelte met wachtwoord
-st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown("<h3 style='color: #DAA520;'>Download resultaten</h3>", unsafe_allow_html=True)
-wachtwoord = st.text_input("Geef het wachtwoord in om het Excelbestand te downloaden:", type="password")
-if wachtwoord == "OT03PlanningGentbrugge":
-    if os.path.exists("voorkeuren_resultaten.xlsx"):
-        with open("voorkeuren_resultaten.xlsx", "rb") as file:
-            st.download_button(
-                label="📥 Download Excelbestand",
-                data=file,
-                file_name="voorkeuren_resultaten.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-elif wachtwoord:
-    st.error("Ongeldig wachtwoord.")
+# Downloadgedeelte kan eventueel uitgeschakeld worden als je geen Excel meer gebruikt
