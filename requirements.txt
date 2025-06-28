@@ -1,5 +1,5 @@
-streamlit
-streamlit-sortables
-pandas
-requests
-matplotlib
+streamlit==1.35.0
+streamlit-sortables==0.2.0
+pandas==2.2.2
+requests==2.31.0
+matplotlib==3.8.4
