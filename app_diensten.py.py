@@ -4,9 +4,10 @@ import pandas as pd
 import requests
 from datetime import datetime
 
-# ====== Google Sheet laden ======
+# ====== Google Sheet laden en kolomnamen normaliseren ======
 url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
 df_personeel = pd.read_csv(url, dtype=str)
+df_personeel.columns = df_personeel.columns.str.strip().str.lower()
 
 # ====== Titel ======
 st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
@@ -98,7 +99,7 @@ if st.button("Verzend je antwoorden"):
         }
 
         # Verzenden naar SheetDB
-        sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"  # ← Je eigen SheetDB API-link hier!
+        sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"  # ← jouw SheetDB-link
         response = requests.post(sheetdb_url, json={"data": resultaat})
 
         if response.status_code == 201:
