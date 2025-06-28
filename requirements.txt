@@ -1,5 +1,6 @@
 streamlit
-streamlit_sortables
+streamlit-sortables
 pandas
 requests
 matplotlib
+python-dateutil
