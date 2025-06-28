@@ -4,10 +4,14 @@ import pandas as pd
 import requests
 from datetime import datetime
 
-# Titel
+# ====== Google Sheet laden ======
+url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
+df_personeel = pd.read_csv(url, dtype=str)
+
+# ====== Titel ======
 st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-# Vraag 1: Selectie
+# ====== Vraag 1: Selectie ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 1: Kies je gewenste diensten</h2>", unsafe_allow_html=True)
 diensten = [
     "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
@@ -22,7 +26,7 @@ diensten = [
 ]
 geselecteerd = st.multiselect("Selecteer één of meerdere diensten:", diensten)
 
-# Vraag 2: Rangschikking
+# ====== Vraag 2: Rangschikking ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 2: Rangschik je voorkeuren (versleep de items)</h2>", unsafe_allow_html=True)
 volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else []
 
@@ -33,22 +37,30 @@ if geselecteerd:
 else:
     st.info("Selecteer eerst één of meerdere diensten om verder te gaan.")
 
-# Vraag 3: Personeelsnummer
+# ====== Vraag 3: Personeelsnummer ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 3: Personeelsnummer</h2>", unsafe_allow_html=True)
 personeelsnummer = st.text_input(label="", placeholder="Vul hier je personeelsnummer in", key="personeelsnummer")
 
-# Vraag 4: Naam en voornaam
-st.markdown("<h2 style='color: #DAA520;'>Vraag 4: Naam en voornaam</h2>", unsafe_allow_html=True)
-naam = st.text_input(label="", placeholder="Vul hier je naam en voornaam in", key="naam")
+# Naam automatisch ophalen
+naam_gevonden = ""
+if personeelsnummer:
+    naam_match = df_personeel[df_personeel["personeelsnummer"] == personeelsnummer]["naam"].values
+    if len(naam_match) > 0:
+        naam_gevonden = naam_match[0]
+        st.success(f"Welkom, {naam_gevonden}!")
 
-# Vraag 5: Teamcoach
+# ====== Vraag 4: Naam en voornaam ======
+st.markdown("<h2 style='color: #DAA520;'>Vraag 4: Naam en voornaam</h2>", unsafe_allow_html=True)
+naam = st.text_input(label="", value=naam_gevonden, placeholder="Naam wordt automatisch ingevuld indien gekend", disabled=bool(naam_gevonden), key="naam")
+
+# ====== Vraag 5: Teamcoach ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 5: Wie is jouw teamcoach?</h2>", unsafe_allow_html=True)
 teamcoach = st.radio("Selecteer je teamcoach:", [
     "Christoff Rotty", "Steven Storm", "Dominique De Clercq", "Els Dewulf",
     "Lucie Van De Velde", "Els Vanhoe", "Kenneth De Rick", "Bart Van Der Beken"
 ])
 
-# Verzenden
+# ====== Verzenden-knop (gestyled) ======
 st.markdown("""
     <style>
     div.stButton > button {
@@ -70,6 +82,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# ====== Verzendactie ======
 if st.button("Verzend je antwoorden"):
     if not personeelsnummer or not naam or not volgorde:
         st.error("Gelieve alle verplichte velden in te vullen.")
@@ -84,10 +97,9 @@ if st.button("Verzend je antwoorden"):
             "Ingevuld op": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         }
 
-        # ⬇️ SheetDB: API-verzending
-        sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"  # <-- VERVANG DOOR JOUW ECHTE URL
-        data = {"data": resultaat}
-        response = requests.post(sheetdb_url, json=data)
+        # Verzenden naar SheetDB
+        sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"  # ← Je eigen SheetDB API-link hier!
+        response = requests.post(sheetdb_url, json={"data": resultaat})
 
         if response.status_code == 201:
             st.success(f"Bedankt {naam}, je voorkeuren werden opgeslagen via SheetDB!")
@@ -95,5 +107,3 @@ if st.button("Verzend je antwoorden"):
                 st.json(resultaat)
         else:
             st.error("Er ging iets mis bij het verzenden naar SheetDB.")
-
-# Downloadgedeelte kan eventueel uitgeschakeld worden als je geen Excel meer gebruikt
