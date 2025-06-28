@@ -42,8 +42,18 @@ if personeelsnummer:
             st.info("We hebben eerder ingevulde gegevens gevonden. Je kan ze nu bewerken.")
             eerder_voorkeuren = bestaande_data.get("Voorkeuren", "").split(", ")
 
-# ====== Vraag 2: Kies je gewenste diensten ======
-st.markdown("<h2 style='color: #DAA520;'>Vraag 2: Kies je gewenste diensten</h2>", unsafe_allow_html=True)
+# ====== Vraag 2: Naam en voornaam ======
+st.markdown("<h2 style='color: #DAA520;'>Vraag 2: Naam en voornaam</h2>", unsafe_allow_html=True)
+naam = st.text_input(label="", value=naam_gevonden or (bestaande_data.get("Naam") if bestaande_data else ""), 
+                     placeholder="Naam wordt automatisch ingevuld", disabled=bool(naam_gevonden), key="naam")
+
+# ====== Vraag 3: Wie is jouw teamcoach? ======
+st.markdown("<h2 style='color: #DAA520;'>Vraag 3: Wie is jouw teamcoach?</h2>", unsafe_allow_html=True)
+teamcoach = st.text_input(label="", value=coach_gevonden or (bestaande_data.get("Teamcoach") if bestaande_data else ""), 
+                          placeholder="Teamcoach wordt automatisch ingevuld", disabled=bool(coach_gevonden), key="coach")
+
+# ====== Vraag 4: Kies je gewenste diensten ======
+st.markdown("<h2 style='color: #DAA520;'>Vraag 4: Kies je gewenste diensten</h2>", unsafe_allow_html=True)
 diensten = [
     "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
     "G09 (Gelede Bus 9 & 11 Laat-Vroeg)", "GW09 (Gelede Bus 9 & 11 Week-Week)", "B24 (Busmix Laat-Vroeg)",
@@ -64,16 +74,6 @@ if geselecteerd:
         st.write(f"{i}. {item}")
 else:
     st.info("Selecteer eerst één of meerdere diensten om verder te gaan.")
-
-# ====== Vraag 3: Naam ======
-st.markdown("<h2 style='color: #DAA520;'>Vraag 3: Naam en voornaam</h2>", unsafe_allow_html=True)
-naam = st.text_input(label="", value=naam_gevonden or (bestaande_data.get("Naam") if bestaande_data else ""), 
-                     placeholder="Naam wordt automatisch ingevuld", disabled=bool(naam_gevonden), key="naam")
-
-# ====== Vraag 4: Wie is jouw teamcoach? ======
-st.markdown("<h2 style='color: #DAA520;'>Vraag 4: Wie is jouw teamcoach?</h2>", unsafe_allow_html=True)
-teamcoach = st.text_input(label="", value=coach_gevonden or (bestaande_data.get("Teamcoach") if bestaande_data else ""), 
-                          placeholder="Teamcoach wordt automatisch ingevuld", disabled=bool(coach_gevonden), key="coach")
 
 # ====== Vraag 5: Bevestiging ======
 bevestigd = st.checkbox(
