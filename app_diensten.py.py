@@ -15,21 +15,7 @@ df_personeel.columns = df_personeel.columns.str.strip().str.lower()
 # ====== Titel ======
 st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-# ====== Vraag 1: Selectie ======
-st.markdown("<h2 style='color: #DAA520;'>Vraag 1: Kies je gewenste diensten</h2>", unsafe_allow_html=True)
-diensten = [
-    "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
-    "G09 (Gelede Bus 9 & 11 Laat-Vroeg)", "GW09 (Gelede Bus 9 & 11 Week-Week)", "B24 (Busmix Laat-Vroeg)",
-    "G70 (Gelede Bus 70 & 71 Laat-Vroeg)", "G10 (Gelede Bus 10 & 12 Laat-Vroeg)", "GW10 (Gelede Bus 10 & 12 Week-Week)",
-    "S05 (Standaardbus 5 & 33 Laat-Vroeg)", "SW05 (Standaardbus 5 & 33 Week-Week)", "TD12 (Dagdiensten Tram)",
-    "BD12 (Dagdiensten Bus)", "MV12 (Bustrammix Vroeg)", "ML12 (Bustrammix Reserve)",
-    "TR15 (Tram Weekend Thuis met Onderbroken Diensten)", "BR15 (Bus Weekend Thuis met Onderbroken Diensten)",
-    "M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten)", "BN24 (Late Nachtdiensten Bus)",
-    "TN24 (Late Nachtdiensten Tram)", "MN24 (Late Nachtdiensten Bustrammix)",
-    "BO15 (Onderbroken Diensten Bus)", "TO15 (Onderbroken Diensten Tram)", "MW12 (Bustrammix Weekendrol)"
-]
-
-# ====== Vraag 3: Personeelsnummer ======
+# ====== Vraag 1: Personeelsnummer ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 1: Personeelsnummer</h2>", unsafe_allow_html=True)
 personeelsnummer = st.text_input(label="", placeholder="Vul hier je personeelsnummer in", key="personeelsnummer").strip()
 
@@ -56,8 +42,19 @@ if personeelsnummer:
             st.info("We hebben eerder ingevulde gegevens gevonden. Je kan ze nu bewerken.")
             eerder_voorkeuren = bestaande_data.get("Voorkeuren", "").split(", ")
 
-# ====== Vraag 2: Selectie en rangschikking ======
-st.markdown("<h2 style='color: #DAA520;'>Vraag 2: Selecteer en rangschik je voorkeuren</h2>", unsafe_allow_html=True)
+# ====== Vraag 2: Kies je gewenste diensten ======
+st.markdown("<h2 style='color: #DAA520;'>Vraag 2: Kies je gewenste diensten</h2>", unsafe_allow_html=True)
+diensten = [
+    "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
+    "G09 (Gelede Bus 9 & 11 Laat-Vroeg)", "GW09 (Gelede Bus 9 & 11 Week-Week)", "B24 (Busmix Laat-Vroeg)",
+    "G70 (Gelede Bus 70 & 71 Laat-Vroeg)", "G10 (Gelede Bus 10 & 12 Laat-Vroeg)", "GW10 (Gelede Bus 10 & 12 Week-Week)",
+    "S05 (Standaardbus 5 & 33 Laat-Vroeg)", "SW05 (Standaardbus 5 & 33 Week-Week)", "TD12 (Dagdiensten Tram)",
+    "BD12 (Dagdiensten Bus)", "MV12 (Bustrammix Vroeg)", "ML12 (Bustrammix Reserve)",
+    "TR15 (Tram Weekend Thuis met Onderbroken Diensten)", "BR15 (Bus Weekend Thuis met Onderbroken Diensten)",
+    "M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten)", "BN24 (Late Nachtdiensten Bus)",
+    "TN24 (Late Nachtdiensten Tram)", "MN24 (Late Nachtdiensten Bustrammix)",
+    "BO15 (Onderbroken Diensten Bus)", "TO15 (Onderbroken Diensten Tram)", "MW12 (Bustrammix Weekendrol)"
+]
 geselecteerd = st.multiselect("Selecteer één of meerdere diensten:", diensten, default=eerder_voorkeuren)
 volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else []
 
@@ -68,17 +65,17 @@ if geselecteerd:
 else:
     st.info("Selecteer eerst één of meerdere diensten om verder te gaan.")
 
-# ====== Vraag 4: Naam ======
+# ====== Vraag 3: Naam ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 3: Naam en voornaam</h2>", unsafe_allow_html=True)
 naam = st.text_input(label="", value=naam_gevonden or (bestaande_data.get("Naam") if bestaande_data else ""), 
                      placeholder="Naam wordt automatisch ingevuld", disabled=bool(naam_gevonden), key="naam")
 
-# ====== Vraag 5: Teamcoach ======
+# ====== Vraag 4: Wie is jouw teamcoach? ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 4: Wie is jouw teamcoach?</h2>", unsafe_allow_html=True)
 teamcoach = st.text_input(label="", value=coach_gevonden or (bestaande_data.get("Teamcoach") if bestaande_data else ""), 
                           placeholder="Teamcoach wordt automatisch ingevuld", disabled=bool(coach_gevonden), key="coach")
 
-# ====== Bevestigingscheckbox ======
+# ====== Vraag 5: Bevestiging ======
 bevestigd = st.checkbox(
     "Ik bevestig dat mijn voorkeur correct is ingevuld. Bij wijzigingen in de planning mag ik automatisch ingepland worden op basis van mijn plaatsvoorkeur binnen deze rol(len)."
 )
