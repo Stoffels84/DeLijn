@@ -41,24 +41,24 @@ else:
 st.markdown("<h2 style='color: #DAA520;'>Vraag 3: Personeelsnummer</h2>", unsafe_allow_html=True)
 personeelsnummer = st.text_input(label="", placeholder="Vul hier je personeelsnummer in", key="personeelsnummer")
 
-# Naam automatisch ophalen
+# ====== Automatisch naam + teamcoach ophalen ======
 naam_gevonden = ""
+coach_gevonden = ""
+
 if personeelsnummer:
-    naam_match = df_personeel[df_personeel["personeelsnummer"] == personeelsnummer]["naam"].values
-    if len(naam_match) > 0:
-        naam_gevonden = naam_match[0]
+    match = df_personeel[df_personeel["personeelsnummer"] == personeelsnummer]
+    if not match.empty:
+        naam_gevonden = match.iloc[0]["naam"]
+        coach_gevonden = match.iloc[0]["teamcoach"]
         st.success(f"Welkom, {naam_gevonden}!")
 
-# ====== Vraag 4: Naam en voornaam ======
+# ====== Vraag 4: Naam ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 4: Naam en voornaam</h2>", unsafe_allow_html=True)
-naam = st.text_input(label="", value=naam_gevonden, placeholder="Naam wordt automatisch ingevuld indien gekend", disabled=bool(naam_gevonden), key="naam")
+naam = st.text_input(label="", value=naam_gevonden, placeholder="Naam wordt automatisch ingevuld", disabled=bool(naam_gevonden), key="naam")
 
 # ====== Vraag 5: Teamcoach ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 5: Wie is jouw teamcoach?</h2>", unsafe_allow_html=True)
-teamcoach = st.radio("Selecteer je teamcoach:", [
-    "Christoff Rotty", "Steven Storm", "Dominique De Clercq", "Els Dewulf",
-    "Lucie Van De Velde", "Els Vanhoe", "Kenneth De Rick", "Bart Van Der Beken"
-])
+teamcoach = st.text_input(label="", value=coach_gevonden, placeholder="Teamcoach wordt automatisch ingevuld", disabled=bool(coach_gevonden), key="coach")
 
 # ====== Verzenden-knop (gestyled) ======
 st.markdown("""
@@ -84,7 +84,7 @@ st.markdown("""
 
 # ====== Verzendactie ======
 if st.button("Verzend je antwoorden"):
-    if not personeelsnummer or not naam or not volgorde:
+    if not personeelsnummer or not naam or not teamcoach or not volgorde:
         st.error("Gelieve alle verplichte velden in te vullen.")
     elif not personeelsnummer.isdigit():
         st.error("Het personeelsnummer moet enkel cijfers bevatten.")
