@@ -5,57 +5,15 @@ import requests
 from datetime import datetime
 import matplotlib.pyplot as plt
 import hashlib
-import smtplib
-from email.mime.text import MIMEText
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
 google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
 wachtwoord_admin = "OTGentPlanning"
 
-smtp_server = "smtp.gmail.com"
-smtp_port = 587
-smtp_user = "no.reply.de.lijn.9050@gmail.com"
-smtp_password = "btsz olze cgdh kygp"
-ontvanger_email = "29076@delijn.be"  # fallback
-
 # ====== Functie voor wachtwoordhashing ======
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
-
-# ====== Functie om e-mail te verzenden ======
-def verzend_email(naam, personeelsnummer, teamcoach, voorkeuren, timestamp):
-    coach_emails = {
-        "Lien": "lien@delijn.be",
-        "Bart": "bart@delijn.be",
-        "Sofie": "sofie@delijn.be",
-        "Tom": "tom@delijn.be",
-        # Voeg meer teamcoaches toe indien nodig
-    }
-    ontvanger = coach_emails.get(teamcoach, ontvanger_email)
-    onderwerp = f"Nieuwe dienstvoorkeur van {naam}"
-    inhoud = f"""
-Naam: {naam}
-Personeelsnummer: {personeelsnummer}
-Teamcoach: {teamcoach}
-
-Voorkeursvolgorde:
-{chr(10).join(f"{i+1}. {v}" for i, v in enumerate(voorkeuren))}
-
-Ingevuld op: {timestamp}
-"""
-    msg = MIMEText(inhoud)
-    msg["Subject"] = onderwerp
-    msg["From"] = smtp_user
-    msg["To"] = ontvanger
-
-    try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.send_message(msg)
-    except Exception as e:
-        st.warning(f"📧 Kon geen e-mail verzenden: {e}")
 
 # ====== Admin login ======
 is_admin = False
@@ -219,7 +177,7 @@ else:
                 "Teamcoach": teamcoach,
                 "Voorkeuren": ", ".join(volgorde),
                 "Bevestiging plaatsvoorkeur": "True",
-                "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%d/%m/%Y %H:%M:%S")),
+                "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%d/%m/%Y %H:%M:%S")) if bestaande_data else datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
                 "Laatste aanpassing": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
             }
             try:
@@ -230,7 +188,6 @@ else:
                         response = requests.post(sheetdb_url, json={"data": resultaat})
                     response.raise_for_status()
                     st.success(f"Bedankt {naam}, je voorkeuren zijn opgeslagen!")
-                    verzend_email(naam, personeelsnummer, teamcoach, volgorde, resultaat["Laatste aanpassing"])
                     with st.expander("Bekijk je ingediende gegevens"):
                         st.json(resultaat)
             except Exception as e:
