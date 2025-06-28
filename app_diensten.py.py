@@ -86,7 +86,7 @@ if is_admin:
 if not is_admin:
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns([1, 2])
+    col1, col2 = st.columns([1.5, 2])  # Verbreed linkerkolom
     with col1:
         with st.container():
             st.info("""
@@ -105,6 +105,8 @@ if not is_admin:
             """, icon="ℹ️")
 
     with col2:
+        # ... alle code van col2 blijft ongewijzigd ...
+
         try:
             df_personeel = pd.read_csv(google_sheet_url, dtype=str)
             if df_personeel.columns.isnull().any():
