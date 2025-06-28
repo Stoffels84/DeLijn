@@ -86,7 +86,7 @@ if is_admin:
 if not is_admin:
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns([1.5, 2])  # Verbreed linkerkolom
+    col1, col2 = st.columns([2, 2])  # Linkerkolom breder gemaakt
     with col1:
         with st.container():
             st.info("""
@@ -105,6 +105,9 @@ if not is_admin:
             """, icon="ℹ️")
 
     with col2:
+        st.text_input("Personeelsnummer")
+        st.text_input("Persoonlijke code (4 cijfers)", type="password")
+
         # ... alle code van col2 blijft ongewijzigd ...
 
         try:
