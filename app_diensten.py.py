@@ -40,7 +40,7 @@ else:
 
 # ====== Vraag 3: Personeelsnummer ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 3: Personeelsnummer</h2>", unsafe_allow_html=True)
-personeelsnummer = st.text_input(label="", placeholder="Vul hier je personeelsnummer in", key="personeelsnummer")
+personeelsnummer = st.text_input(label="", placeholder="Vul hier je personeelsnummer in", key="personeelsnummer").strip()
 
 # ====== Automatisch naam + teamcoach ophalen ======
 naam_gevonden = ""
@@ -52,6 +52,8 @@ if personeelsnummer:
         naam_gevonden = match.iloc[0]["naam"]
         coach_gevonden = match.iloc[0]["teamcoach"]
         st.success(f"Welkom, {naam_gevonden}!")
+    else:
+        st.warning("Personeelsnummer niet gevonden in de lijst.")
 
 # ====== Vraag 4: Naam ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 4: Naam en voornaam</h2>", unsafe_allow_html=True)
@@ -60,6 +62,11 @@ naam = st.text_input(label="", value=naam_gevonden, placeholder="Naam wordt auto
 # ====== Vraag 5: Teamcoach ======
 st.markdown("<h2 style='color: #DAA520;'>Vraag 5: Wie is jouw teamcoach?</h2>", unsafe_allow_html=True)
 teamcoach = st.text_input(label="", value=coach_gevonden, placeholder="Teamcoach wordt automatisch ingevuld", disabled=bool(coach_gevonden), key="coach")
+
+# ====== Bevestigingscheckbox ======
+bevestigd = st.checkbox(
+    "Ik bevestig dat mijn voorkeur correct is ingevuld. Bij wijzigingen in de planning mag ik automatisch ingepland worden op basis van mijn plaatsvoorkeur binnen deze rol(len)."
+)
 
 # ====== Verzenden-knop (gestyled) ======
 st.markdown("""
@@ -85,7 +92,9 @@ st.markdown("""
 
 # ====== Verzendactie ======
 if st.button("Verzend je antwoorden"):
-    if not personeelsnummer or not naam or not teamcoach or not volgorde:
+    if not bevestigd:
+        st.error("Je moet eerst bevestigen dat je akkoord gaat met de plaatsvoorkeurregel.")
+    elif not personeelsnummer or not naam or not teamcoach or not volgorde:
         st.error("Gelieve alle verplichte velden in te vullen.")
     elif not personeelsnummer.isdigit():
         st.error("Het personeelsnummer moet enkel cijfers bevatten.")
@@ -95,11 +104,11 @@ if st.button("Verzend je antwoorden"):
             "Naam": naam,
             "Teamcoach": teamcoach,
             "Voorkeuren": ", ".join(volgorde),
+            "Bevestiging plaatsvoorkeur": "Ja",
             "Ingevuld op": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         }
 
-        # Verzenden naar SheetDB
-        sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"  # ← jouw SheetDB-link
+        sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"  # ← SheetDB-link
         response = requests.post(sheetdb_url, json={"data": resultaat})
 
         if response.status_code == 201:
