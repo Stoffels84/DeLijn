@@ -11,7 +11,8 @@ google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-
 geheime_code = "OTGentPlanning"
 
 # ====== Toegang controleren ======
-query_params = st.experimental_get_query_params()
+st.query_params
+
 
 
 is_admin = query_params.get("admin_toegang", [""])[0] == geheime_code
