@@ -32,7 +32,24 @@ if is_admin:
             st.sidebar.header("🔎 Filters")
             coaches = sorted(df["Teamcoach"].dropna().unique())
             gekozen_coach = st.sidebar.multiselect("Filter op teamcoach", coaches, default=coaches)
-            df_filtered = df[df["Teamcoach"].isin(gekozen_coach)]
+
+# Personeelsnummer filter (inclusief gedeeltelijke zoekterm)
+zoeknummer = st.sidebar.text_input("Zoek op personeelsnummer (volledig of gedeeltelijk)")
+
+# Dienstfilter (alle unieke voorkeuren in een platte lijst)
+alle_voorkeuren_flat = df["Voorkeuren"].dropna().str.cat(sep=",").split(",")
+diensten_uniek = sorted(set(v.strip() for v in alle_voorkeuren_flat if v.strip()))
+gekozen_diensten = st.sidebar.multiselect("Filter op dienst", diensten_uniek)
+
+# Filters toepassen
+df_filtered = df[df["Teamcoach"].isin(gekozen_coach)]
+
+if zoeknummer:
+    df_filtered = df_filtered[df_filtered["Personeelsnummer"].str.contains(zoeknummer.strip(), na=False)]
+
+if gekozen_diensten:
+    df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(lambda x: any(dienst in x for dienst in gekozen_diensten))]
+
 
             # Tabel
             st.subheader("📋 Overzicht van inzendingen")
