@@ -88,7 +88,7 @@ if not is_admin:
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        st.image("81155b45-372e-4ad3-a644-13545b5e0391.png", use_column_width=True, caption="Bushalte Gent - De Lijn")
+        st.image("19. Busstation Gent.webp", use_column_width=True, caption="Bushalte Gent - De Lijn")
 
     with col2:
         try:
