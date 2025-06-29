@@ -5,6 +5,8 @@ import requests
 from datetime import datetime
 import matplotlib.pyplot as plt
 import hashlib
+import io
+from openpyxl import Workbook
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
@@ -13,12 +15,20 @@ google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-
 try:
     wachtwoord_admin = st.secrets["ADMIN_WACHTWOORD"]
 except KeyError:
-    st.error("ADMIN_WACHTWOORD ontbreekt in je secrets.toml. Voeg dit toe voor admintoegang.")
+    st.error("ADMIN_WACHTWOORD ontbreekt in je secrets.toml. Voeg dit toe.")
     st.stop()
 
 # ====== Functie voor wachtwoordhashing ======
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
+
+# ====== CSS ======
+st.markdown("""
+    <style>
+    .block-container {padding-left: 1rem !important; padding-right: 1rem !important;}
+    div.stButton > button {width: 100% !important; padding: 0.75rem; font-size: 1rem;}
+    </style>
+""", unsafe_allow_html=True)
 
 # ====== Admin login ======
 is_admin = False
@@ -27,66 +37,91 @@ password_input = st.sidebar.text_input("Admin wachtwoord", type="password")
 if hash_password(password_input) == hash_password(wachtwoord_admin):
     is_admin = True
 
-# ====== CSS ======
-st.markdown("""
-    <style>
-    .block-container {padding-left: 1rem !important; padding-right: 1rem !important;}
-    .dataframe-container {overflow-x: auto;}
-    div.stButton > button {width: 100% !important; padding: 0.75rem; font-size: 1rem;}
-    input[type="text"], textarea {font-size: 1rem;}
-    .element-container {max-width: 100% !important; overflow-x: auto;}
-    </style>
-""", unsafe_allow_html=True)
-
 # ====== ADMINPAGINA ======
 if is_admin:
     st.markdown("<h1 style='color: #DAA520;'>🔐 Adminoverzicht: Dienstvoorkeuren</h1>", unsafe_allow_html=True)
+
     try:
         response = requests.get(sheetdb_url)
         response.raise_for_status()
         df = pd.DataFrame(response.json())
 
-        if not df.empty:
-            df["Ingevuld op"] = pd.to_datetime(df["Ingevuld op"], dayfirst=True, errors="coerce")
-            df["Aantal voorkeuren"] = df["Voorkeuren"].apply(lambda x: len(str(x).split(",")))
-            df["Bevestigd"] = df["Bevestiging plaatsvoorkeur"].map({"True": "✅", "False": "❌"})
-
-            st.sidebar.header("🔎 Filters")
-            coaches = sorted(df["Teamcoach"].dropna().unique())
-            gekozen_coach = st.sidebar.multiselect("Filter op teamcoach", coaches, default=coaches)
-            zoeknummer = st.sidebar.text_input("Zoek op personeelsnummer")
-            alle_voorkeuren = df["Voorkeuren"].dropna().str.cat(sep=", ").split(",")
-            diensten_uniek = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
-            gekozen_diensten = st.sidebar.multiselect("Filter op dienst", diensten_uniek)
-
-            df_filtered = df[df["Teamcoach"].isin(gekozen_coach)]
-            if zoeknummer:
-                df_filtered = df_filtered[df_filtered["Personeelsnummer"].str.contains(zoeknummer.strip(), na=False)]
-            if gekozen_diensten:
-                df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(lambda x: any(d in x for d in gekozen_diensten))]
-
-            st.subheader("📋 Overzicht van inzendingen")
-            st.dataframe(df_filtered.sort_values("Ingevuld op", ascending=False), use_container_width=True)
-
-            st.subheader("📊 Populairste voorkeuren")
-            telling = pd.Series([v.strip() for v in alle_voorkeuren if v.strip()]).value_counts()
-            fig, ax = plt.subplots()
-            top15 = telling.head(15)
-            colors = ['#DAA520' if dienst == top15.idxmax() else '#CCCCCC' for dienst in top15.index]
-            top15.plot(kind="barh", ax=ax, edgecolor="black", color=colors)
-            ax.invert_yaxis()
-            ax.set_title("Top 15 Populairste Diensten")
-            ax.set_xlabel("Aantal voorkeuren")
-            ax.set_ylabel("Dienst")
-            st.pyplot(fig)
-
-            st.subheader("📄 Exporteer overzicht")
-            csv = df_filtered.to_csv(index=False).encode("utf-8")
-            st.download_button("Download als CSV", data=csv, file_name="dienstvoorkeuren_admin.csv", mime="text/csv")
-        else:
+        if df.empty:
             st.info("Er zijn nog geen inzendingen.")
+            st.stop()
+
+        df["Ingevuld op"] = pd.to_datetime(df["Ingevuld op"], dayfirst=True, errors="coerce")
+        df["Aantal voorkeuren"] = df["Voorkeuren"].apply(lambda x: len(str(x).split(",")))
+        df["Bevestigd"] = df["Bevestiging plaatsvoorkeur"].map({"True": "✅", "False": "❌"})
+
+        # ========== Filters ==========
+        st.sidebar.header("🔎 Filters")
+        coaches = sorted(df["Teamcoach"].dropna().unique())
+        gekozen_coach = st.sidebar.multiselect("Filter op teamcoach", coaches, default=coaches)
+        zoeknummer = st.sidebar.text_input("Zoek op personeelsnummer")
+        alle_voorkeuren = df["Voorkeuren"].dropna().str.cat(sep=", ").split(",")
+        diensten_uniek = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
+        gekozen_diensten = st.sidebar.multiselect("Filter op dienst", diensten_uniek)
+
+        df_filtered = df[df["Teamcoach"].isin(gekozen_coach)]
+        if zoeknummer:
+            df_filtered = df_filtered[df_filtered["Personeelsnummer"].str.contains(zoeknummer.strip(), na=False)]
+        if gekozen_diensten:
+            df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(lambda x: any(d in x for d in gekozen_diensten))]
+
+        st.subheader("📋 Overzicht van inzendingen")
+        st.dataframe(df_filtered.sort_values("Ingevuld op", ascending=False), use_container_width=True)
+
+        st.subheader("📊 Populairste voorkeuren")
+        telling = pd.Series([v.strip() for v in alle_voorkeuren if v.strip()]).value_counts()
+        fig, ax = plt.subplots()
+        top15 = telling.head(15)
+        kleuren = ['#DAA520' if dienst == top15.idxmax() else '#CCCCCC' for dienst in top15.index]
+        top15.plot(kind="barh", ax=ax, edgecolor="black", color=kleuren)
+        ax.invert_yaxis()
+        ax.set_title("Top 15 Populairste Diensten")
+        ax.set_xlabel("Aantal voorkeuren")
+        ax.set_ylabel("Dienst")
+        st.pyplot(fig)
+
+        st.subheader("👥 Overzicht per dienst")
+        excel_output = io.BytesIO()
+        wb = Workbook()
+        ws_first = True
+
+        for dienst in diensten_uniek:
+            df_dienst = df[df["Voorkeuren"].str.contains(dienst, na=False)].copy()
+            df_dienst = df_dienst[["Personeelsnummer", "Naam"]].dropna()
+            df_dienst["Personeelsnummer"] = pd.to_numeric(df_dienst["Personeelsnummer"], errors="coerce")
+            df_dienst = df_dienst.dropna(subset=["Personeelsnummer"])
+            df_dienst = df_dienst.sort_values("Personeelsnummer")
+
+            if not df_dienst.empty:
+                st.markdown(f"### 🚍 {dienst}")
+                st.dataframe(df_dienst, use_container_width=True)
+
+                if ws_first:
+                    ws = wb.active
+                    ws.title = dienst[:31]
+                    ws_first = False
+                else:
+                    ws = wb.create_sheet(title=dienst[:31])
+
+                ws.append(["Personeelsnummer", "Naam"])
+                for _, row in df_dienst.iterrows():
+                    ws.append([int(row["Personeelsnummer"]), row["Naam"]])
+
+        wb.save(excel_output)
+
+        st.download_button(
+            label="📥 Download Excel-overzicht per dienst",
+            data=excel_output.getvalue(),
+            file_name="Overzicht_per_dienst.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
     except Exception as e:
-        st.error(f"❌ Fout bij ophalen gegevens: {e}")
+        st.error(f"❌ Fout bij ophalen of verwerken gegevens: {e}")
 
 # ====== GEBRUIKERSPAGINA ======
 if not is_admin:
@@ -97,15 +132,12 @@ if not is_admin:
     **Om voor een dienstrol met 1 type voertuig te kunnen kiezen**, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn. Een **gemengde dienstrol** kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.
 
     ---
-    #### 🚏 Invulling open plaats
-    De open plaats wordt gepubliceerd voor alle chauffeurs die zich kandidaat wensen te stellen. 
-    Kandidaten worden gerangschikt volgens **stelplaatsanciënniteit**. De eerst gerangschikte neemt de open plaats in.
+    #### 🚏 Open plaats
+    Wordt ingevuld op basis van **anciënniteit** bij kandidaten.
 
-    ---
-    #### 🔄 Invulling doorgeschoven plaats
-    Chauffeurs mogen steeds een aanvraag via mail doorsturen waarin zij hun voorkeur kenbaar maken voor een andere plaats die op dat moment nog niet open staat, maar die ze in de toekomst graag zouden innemen. 
-    Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats inneemt, wordt deze plaats **niet meer uitgehangen** maar onmiddellijk ingevuld. Hiervoor worden de aanvragen nagekeken op **stelplaatsanciënniteit**. De chauffeur met de hoogste stelplaatsanciënniteit zal deze plaats toegewezen krijgen.
-    """, icon="ℹ️")
+    #### 🔄 Doorgeschoven plaats
+    Wordt rechtstreeks ingevuld bij openkomen op basis van eerdere aanvragen.
+    """)
 
     personeelsnummer = st.text_input("Personeelsnummer")
     persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
@@ -123,9 +155,9 @@ if not is_admin:
             if match.empty:
                 st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
             else:
-                naam_gevonden = match.iloc[0]["naam"]
-                coach_gevonden = match.iloc[0]["teamcoach"]
-                st.success(f"👋 Welkom terug, **{naam_gevonden}**!")
+                naam = match.iloc[0]["naam"]
+                coach = match.iloc[0]["teamcoach"]
+                st.success(f"👋 Welkom terug, **{naam}**!")
 
                 bestaande_data = None
                 eerder_voorkeuren = []
@@ -133,8 +165,7 @@ if not is_admin:
                 gevonden = response_check.json()
                 if gevonden:
                     bestaande_data = gevonden[0]
-                    voorkeur_string = bestaande_data.get("Voorkeuren", "")
-                    eerder_voorkeuren = [v.strip() for v in voorkeur_string.split(",") if v.strip()]
+                    eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
                     laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
                     st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
@@ -172,8 +203,8 @@ if not is_admin:
                     else:
                         resultaat = {
                             "Personeelsnummer": personeelsnummer,
-                            "Naam": naam_gevonden,
-                            "Teamcoach": coach_gevonden,
+                            "Naam": naam,
+                            "Teamcoach": coach,
                             "Voorkeuren": ", ".join(volgorde),
                             "Bevestiging plaatsvoorkeur": "True",
                             "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%d/%m/%Y %H:%M:%S")) if bestaande_data else datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
@@ -182,12 +213,11 @@ if not is_admin:
                         try:
                             with st.spinner("Gegevens worden verwerkt..."):
                                 if bestaande_data:
-                                    response = requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
-                                    st.success(f"✅ Voorkeuren van {naam_gevonden} succesvol bijgewerkt.")
+                                    requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
+                                    st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
                                 else:
-                                    response = requests.post(sheetdb_url, json={"data": resultaat})
-                                    st.success(f"✅ Bedankt {naam_gevonden}, je voorkeuren zijn succesvol ingediend.")
-                                response.raise_for_status()
+                                    requests.post(sheetdb_url, json={"data": resultaat})
+                                    st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
                                 with st.expander("Bekijk je ingediende gegevens"):
                                     st.json(resultaat)
                         except Exception as e:

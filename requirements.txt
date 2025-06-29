@@ -3,4 +3,4 @@ streamlit-sortables
 pandas
 requests
 matplotlib
-python-dateutil
+openpyxl
