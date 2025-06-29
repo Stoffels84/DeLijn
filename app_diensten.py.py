@@ -36,6 +36,7 @@ password_input = st.sidebar.text_input("Admin wachtwoord", type="password")
 if hash_password(password_input) == hash_password(wachtwoord_admin):
     is_admin = True
 
+
 # ====== ADMINPAGINA ======
 if is_admin:
     st.markdown("<h1 style='color: #DAA520;'>🔐 Adminoverzicht: Dienstvoorkeuren</h1>", unsafe_allow_html=True)
@@ -55,30 +56,36 @@ if is_admin:
         df["Aantal voorkeuren"] = df["Voorkeuren"].apply(lambda x: len(str(x).split(",")))
         df["Bevestigd"] = df["Bevestiging plaatsvoorkeur"].map({"True": "✅", "False": "❌"})
 
-        # Filteren op personeelsnummer en dienst
+        # ========== Filters ==========
         st.sidebar.header("🔎 Filters")
         zoeknummer = st.sidebar.text_input("Zoek op personeelsnummer")
-        alle_voorkeuren = df["Voorkeuren"].dropna().astype(str).str.cat(sep=",").split(",")
-alle_voorkeuren = [v.strip() for v in alle_voorkeuren if v.strip()]
-diensten_uniek = sorted(set(alle_voorkeuren))
 
-if not diensten_uniek:
-    st.warning("⚠️ Geen unieke diensten gevonden in de data. Controleer of de kolom 'Voorkeuren' correct gevuld is.")
+        alle_voorkeuren_flat = df["Voorkeuren"].dropna().astype(str).str.cat(sep=",").split(",")
+        alle_voorkeuren_flat = [v.strip() for v in alle_voorkeuren_flat if v.strip()]
+        diensten_uniek = sorted(set(alle_voorkeuren_flat))
+
+        if not diensten_uniek:
+            st.warning("⚠️ Geen unieke diensten gevonden in de data.")
+            st.stop()
+
         gekozen_diensten = st.sidebar.multiselect("Filter op dienst", diensten_uniek)
 
         df_filtered = df.copy()
         if zoeknummer:
             df_filtered = df_filtered[df_filtered["Personeelsnummer"].str.contains(zoeknummer.strip(), na=False)]
         if gekozen_diensten:
-            df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(lambda x: any(d in x for d in gekozen_diensten))]
+            df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(
+                lambda x: any(d in x for d in gekozen_diensten)
+            )]
 
         st.subheader("📋 Overzicht van inzendingen")
         st.dataframe(df_filtered.sort_values("Ingevuld op", ascending=False), use_container_width=True)
 
+        # ========== Populairste diensten ==========
         st.subheader("📊 Populairste voorkeuren")
-        telling = pd.Series([v.strip() for v in alle_voorkeuren if v.strip()]).value_counts()
-        fig, ax = plt.subplots()
+        telling = pd.Series(alle_voorkeuren_flat).value_counts()
         top15 = telling.head(15)
+        fig, ax = plt.subplots()
         kleuren = ['#DAA520' if dienst == top15.idxmax() else '#CCCCCC' for dienst in top15.index]
         top15.plot(kind="barh", ax=ax, edgecolor="black", color=kleuren)
         ax.invert_yaxis()
@@ -87,14 +94,19 @@ if not diensten_uniek:
         ax.set_ylabel("Dienst")
         st.pyplot(fig)
 
+        # ========== Overzicht per dienst ==========
         st.subheader("👥 Overzicht per dienst")
 
         excel_output = io.BytesIO()
         wb = Workbook()
         ws_first = True
 
-     for dienst in diensten_uniek:
-    df_dienst = df[df["Voorkeuren"].fillna("").apply(lambda x: dienst in [v.strip() for v in str(x).split(",")])].copy()
+        werkbladen_aangemaakt = False
+
+        for dienst in diensten_uniek:
+            df_dienst = df[df["Voorkeuren"].apply(
+                lambda x: dienst in [v.strip() for v in str(x).split(",")]
+            )].copy()
 
             df_dienst = df_dienst[["Personeelsnummer", "Naam"]].dropna()
             df_dienst["Personeelsnummer"] = pd.to_numeric(df_dienst["Personeelsnummer"], errors="coerce")
@@ -107,6 +119,7 @@ if not diensten_uniek:
                 st.info("⚠️ Geen geldige inschrijvingen gevonden.")
                 continue
 
+            werkbladen_aangemaakt = True
             st.dataframe(df_dienst, use_container_width=True)
 
             titel = dienst[:31]
@@ -120,20 +133,21 @@ if not diensten_uniek:
             ws.append(["Personeelsnummer", "Naam"])
             for _, row in df_dienst.iterrows():
                 ws.append([row["Personeelsnummer"], row["Naam"]])
-if not wb.sheetnames:
-    st.warning("⚠️ Geen werkbladen aangemaakt. Mogelijk waren er geen deelnemers per dienst.")
-    st.stop()
 
-        wb.save(excel_output)
-        st.download_button(
-            label="📥 Download Excel-overzicht per dienst",
-            data=excel_output.getvalue(),
-            file_name="Overzicht_per_dienst.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        if werkbladen_aangemaakt:
+            wb.save(excel_output)
+            st.download_button(
+                label="📥 Download Excel-overzicht per dienst",
+                data=excel_output.getvalue(),
+                file_name="Overzicht_per_dienst.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        else:
+            st.warning("⚠️ Er werden geen werkbladen aangemaakt. Geen geldige voorkeuren gevonden.")
 
     except Exception as e:
         st.error(f"❌ Fout bij ophalen of verwerken gegevens: {e}")
+
 
 # ====== GEBRUIKERSPAGINA ======
 if not is_admin:
