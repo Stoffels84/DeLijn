@@ -18,7 +18,6 @@ except KeyError:
     st.error("ADMIN_WACHTWOORD ontbreekt in je secrets.toml. Voeg dit toe.")
     st.stop()
 
-# ====== Functie voor wachtwoordhashing ======
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
@@ -38,60 +37,100 @@ if hash_password(password_input) == hash_password(wachtwoord_admin):
     is_admin = True
 
 # ====== ADMINPAGINA ======
-st.subheader("👥 Overzicht per dienst")
+if is_admin:
+    st.markdown("<h1 style='color: #DAA520;'>🔐 Adminoverzicht: Dienstvoorkeuren</h1>", unsafe_allow_html=True)
 
-# Herstel: leegtes opvangen + types goed zetten
-df["Voorkeuren"] = df["Voorkeuren"].fillna("")
-df["Personeelsnummer"] = df["Personeelsnummer"].astype(str).str.strip()
+    try:
+        response = requests.get(sheetdb_url)
+        response.raise_for_status()
+        df = pd.DataFrame(response.json())
 
-# Unieke diensten ophalen
-alle_voorkeuren = df["Voorkeuren"].str.cat(sep=", ").split(",")
-diensten_uniek = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
+        if df.empty:
+            st.info("Er zijn nog geen inzendingen.")
+            st.stop()
 
-# Excelbestand voorbereiden
-excel_output = io.BytesIO()
-wb = Workbook()
-ws_first = True
+        df["Voorkeuren"] = df["Voorkeuren"].fillna("")
+        df["Personeelsnummer"] = df["Personeelsnummer"].astype(str).str.strip()
+        df["Ingevuld op"] = pd.to_datetime(df["Ingevuld op"], dayfirst=True, errors="coerce")
+        df["Aantal voorkeuren"] = df["Voorkeuren"].apply(lambda x: len(str(x).split(",")))
+        df["Bevestigd"] = df["Bevestiging plaatsvoorkeur"].map({"True": "✅", "False": "❌"})
 
-for dienst in diensten_uniek:
-    df_dienst = df[df["Voorkeuren"].str.contains(dienst, na=False)].copy()
-    df_dienst = df_dienst[["Personeelsnummer", "Naam"]].dropna()
+        # Filters
+        st.sidebar.header("🔎 Filters")
+        coaches = sorted(df["Teamcoach"].dropna().unique())
+        gekozen_coach = st.sidebar.multiselect("Filter op teamcoach", coaches, default=coaches)
+        zoeknummer = st.sidebar.text_input("Zoek op personeelsnummer")
+        alle_voorkeuren = df["Voorkeuren"].str.cat(sep=", ").split(",")
+        diensten_uniek = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
+        gekozen_diensten = st.sidebar.multiselect("Filter op dienst", diensten_uniek)
 
-    # Geldige personeelsnummers behouden
-    df_dienst["Personeelsnummer"] = pd.to_numeric(df_dienst["Personeelsnummer"], errors="coerce")
-    df_dienst = df_dienst.dropna(subset=["Personeelsnummer"])
-    df_dienst["Personeelsnummer"] = df_dienst["Personeelsnummer"].astype(int)
-    df_dienst = df_dienst.sort_values("Personeelsnummer")
+        df_filtered = df[df["Teamcoach"].isin(gekozen_coach)]
+        if zoeknummer:
+            df_filtered = df_filtered[df_filtered["Personeelsnummer"].str.contains(zoeknummer.strip(), na=False)]
+        if gekozen_diensten:
+            df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(lambda x: any(d in x for d in gekozen_diensten))]
 
-    if df_dienst.empty:
-        st.markdown(f"### 🚍 {dienst}")
-        st.info("⚠️ Geen geldige inschrijvingen gevonden.")
-        continue
+        # Tabel inzendingen
+        st.subheader("📋 Overzicht van inzendingen")
+        st.dataframe(df_filtered.sort_values("Ingevuld op", ascending=False), use_container_width=True)
 
-    # Toon in dashboard
-    st.markdown(f"### 🚍 {dienst}")
-    st.dataframe(df_dienst, use_container_width=True)
+        # Grafiek
+        st.subheader("📊 Populairste voorkeuren")
+        telling = pd.Series([v.strip() for v in alle_voorkeuren if v.strip()]).value_counts()
+        fig, ax = plt.subplots()
+        top15 = telling.head(15)
+        kleuren = ['#DAA520' if dienst == top15.idxmax() else '#CCCCCC' for dienst in top15.index]
+        top15.plot(kind="barh", ax=ax, edgecolor="black", color=kleuren)
+        ax.invert_yaxis()
+        ax.set_title("Top 15 Populairste Diensten")
+        ax.set_xlabel("Aantal voorkeuren")
+        ax.set_ylabel("Dienst")
+        st.pyplot(fig)
 
-    # Voeg tabblad toe aan Excel
-    if ws_first:
-        ws = wb.active
-        ws.title = dienst[:31]
-        ws_first = False
-    else:
-        ws = wb.create_sheet(title=dienst[:31])
+        # Overzicht per dienst + Excel
+        st.subheader("👥 Overzicht per dienst")
 
-    ws.append(["Personeelsnummer", "Naam"])
-    for _, row in df_dienst.iterrows():
-        ws.append([row["Personeelsnummer"], row["Naam"]])
+        excel_output = io.BytesIO()
+        wb = Workbook()
+        ws_first = True
 
-# Downloadknop
-wb.save(excel_output)
-st.download_button(
-    label="📥 Download Excel-overzicht per dienst",
-    data=excel_output.getvalue(),
-    file_name="Overzicht_per_dienst.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
+        for dienst in diensten_uniek:
+            df_dienst = df[df["Voorkeuren"].str.contains(dienst, na=False)].copy()
+            df_dienst = df_dienst[["Personeelsnummer", "Naam"]].dropna()
+            df_dienst["Personeelsnummer"] = pd.to_numeric(df_dienst["Personeelsnummer"], errors="coerce")
+            df_dienst = df_dienst.dropna(subset=["Personeelsnummer"])
+            df_dienst["Personeelsnummer"] = df_dienst["Personeelsnummer"].astype(int)
+            df_dienst = df_dienst.sort_values("Personeelsnummer")
+
+            if df_dienst.empty:
+                st.markdown(f"### 🚍 {dienst}")
+                st.info("⚠️ Geen geldige inschrijvingen gevonden.")
+                continue
+
+            st.markdown(f"### 🚍 {dienst}")
+            st.dataframe(df_dienst, use_container_width=True)
+
+            if ws_first:
+                ws = wb.active
+                ws.title = dienst[:31]
+                ws_first = False
+            else:
+                ws = wb.create_sheet(title=dienst[:31])
+
+            ws.append(["Personeelsnummer", "Naam"])
+            for _, row in df_dienst.iterrows():
+                ws.append([row["Personeelsnummer"], row["Naam"]])
+
+        wb.save(excel_output)
+        st.download_button(
+            label="📥 Download Excel-overzicht per dienst",
+            data=excel_output.getvalue(),
+            file_name="Overzicht_per_dienst.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    except Exception as e:
+        st.error(f"❌ Fout bij ophalen of verwerken gegevens: {e}")
 
 # ====== GEBRUIKERSPAGINA ======
 if not is_admin:
@@ -99,14 +138,7 @@ if not is_admin:
 
     st.info("""
     ### ℹ️ Uitleg
-    **Om voor een dienstrol met 1 type voertuig te kunnen kiezen**, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn. Een **gemengde dienstrol** kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.
-
-    ---
-    #### 🚏 Open plaats
-    Wordt ingevuld op basis van **anciënniteit** bij kandidaten.
-
-    #### 🔄 Doorgeschoven plaats
-    Wordt rechtstreeks ingevuld bij openkomen op basis van eerdere aanvragen.
+    Je kan enkel een dienstrol kiezen waarvoor je gekwalificeerd bent of ingepland werd. Bij gemengde rollen mag je kiezen als je bereid bent de tweede kwalificatie te behalen.
     """)
 
     personeelsnummer = st.text_input("Personeelsnummer")
