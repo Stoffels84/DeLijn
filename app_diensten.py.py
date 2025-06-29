@@ -80,7 +80,7 @@ if not is_admin:
         unieke_diensten = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
         if not unieke_diensten:
             raise ValueError
-except:
+except Exception:
     unieke_diensten = [
     "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
     "G09 (Gelede Bus 9 & 11 Laat-Vroeg)", "GW09 (Gelede Bus 9 & 11 Week-Week)", "B24 (Busmix Laat-Vroeg)",
