@@ -90,7 +90,7 @@ if is_admin:
         ws_first = True
 
         for dienst in diensten_uniek:
-            df_dienst = df[df["Voorkeuren"].str.contains(dienst, na=False)].copy()
+            df_dienst = df[df["Voorkeuren"].apply(lambda x: dienst in [v.strip() for v in str(x).split(",")])].copy()
             df_dienst = df_dienst[["Personeelsnummer", "Naam"]].dropna()
             df_dienst["Personeelsnummer"] = pd.to_numeric(df_dienst["Personeelsnummer"], errors="coerce")
             df_dienst = df_dienst.dropna(subset=["Personeelsnummer"])
