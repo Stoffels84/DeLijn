@@ -77,9 +77,9 @@ if not is_admin:
 
     try:
         alle_voorkeuren = df["Voorkeuren"].str.cat(sep=", ").split(",")
-    unieke_diensten = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
-    if not unieke_diensten:
-        raise ValueError
+        unieke_diensten = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
+        if not unieke_diensten:
+            raise ValueError
 except:
     unieke_diensten = [
     "T24 (Tram Laat-Vroeg)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
