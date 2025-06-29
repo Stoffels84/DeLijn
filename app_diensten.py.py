@@ -22,16 +22,6 @@ except KeyError:
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-def bepaal_datum_invoer(bestaande_invoer, fallback_datum=None):
-    try:
-        if bestaande_invoer:
-            return bestaande_invoer
-    except:
-        pass
-    if fallback_datum:
-        return fallback_datum
-    return datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-
 class DienstPDF(FPDF):
     def header(self):
         self.set_font("Arial", "B", 12)
@@ -70,6 +60,44 @@ st.sidebar.header("🔐 Admin login")
 password_input = st.sidebar.text_input("Admin wachtwoord", type="password")
 if hash_password(password_input) == hash_password(wachtwoord_admin):
     is_admin = True
+
+# ====== GEBRUIKERSPAGINA ======
+if not is_admin:
+    st.markdown("<h1 style='color: #1E90FF;'>📋 Keuzeformulier Dienstvoorkeur</h1>", unsafe_allow_html=True)
+
+    st.info("Gelieve hieronder je voorkeuren in te vullen. De inzending wordt automatisch opgeslagen.")
+
+    naam = st.text_input("Naam")
+    personeelsnummer = st.text_input("Personeelsnummer")
+    bevestiging = st.checkbox("Ik bevestig dat ik deze keuzes vrijwillig heb ingevuld")
+
+    response = requests.get(sheetdb_url)
+    response.raise_for_status()
+    df = pd.DataFrame(response.json())
+
+    alle_voorkeuren = df["Voorkeuren"].str.cat(sep=", ").split(",")
+    unieke_diensten = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
+
+    geselecteerde_voorkeuren = sort_items(unieke_diensten, direction="vertical", label="📌 Rangschik je voorkeuren")
+
+    if st.button("✅ Verzenden"):
+        if not naam or not personeelsnummer or not bevestiging or not geselecteerde_voorkeuren:
+            st.warning("⚠️ Gelieve alle velden in te vullen en je voorkeuren te rangschikken.")
+        else:
+            payload = {
+                "data": {
+                    "Naam": naam,
+                    "Personeelsnummer": personeelsnummer,
+                    "Voorkeuren": ", ".join(geselecteerde_voorkeuren),
+                    "Bevestiging plaatsvoorkeur": str(bevestiging),
+                    "Ingevuld op": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                }
+            }
+            r = requests.post(sheetdb_url, json=payload)
+            if r.status_code == 201:
+                st.success("✅ Je voorkeuren werden succesvol doorgestuurd!")
+            else:
+                st.error("❌ Er ging iets mis bij het verzenden. Probeer opnieuw.")
 
 # ====== ADMINPAGINA ======
 if is_admin:
@@ -162,7 +190,7 @@ if is_admin:
 
         wb.save(excel_output)
         st.download_button(
-            label="📅 Download Excel-overzicht per dienst",
+            label="📥 Download Excel-overzicht per dienst",
             data=excel_output.getvalue(),
             file_name="Overzicht_per_dienst.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
