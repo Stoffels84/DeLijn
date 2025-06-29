@@ -5,12 +5,16 @@ import requests
 from datetime import datetime
 import matplotlib.pyplot as plt
 import hashlib
-import os
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
 google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
-wachtwoord_admin = st.secrets["ADMIN_WACHTWOORD"]
+
+try:
+    wachtwoord_admin = st.secrets["ADMIN_WACHTWOORD"]
+except KeyError:
+    st.error("ADMIN_WACHTWOORD ontbreekt in je secrets.toml. Voeg dit toe voor admintoegang.")
+    st.stop()
 
 # ====== Functie voor wachtwoordhashing ======
 def hash_password(password):
@@ -67,7 +71,9 @@ if is_admin:
             st.subheader("📊 Populairste voorkeuren")
             telling = pd.Series([v.strip() for v in alle_voorkeuren if v.strip()]).value_counts()
             fig, ax = plt.subplots()
-            telling.head(15).plot(kind="barh", ax=ax, edgecolor="black")
+            top15 = telling.head(15)
+            colors = ['#DAA520' if dienst == top15.idxmax() else '#CCCCCC' for dienst in top15.index]
+            top15.plot(kind="barh", ax=ax, edgecolor="black", color=colors)
             ax.invert_yaxis()
             ax.set_title("Top 15 Populairste Diensten")
             ax.set_xlabel("Aantal voorkeuren")
@@ -86,26 +92,28 @@ if is_admin:
 if not is_admin:
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-    with st.container():
-        st.info("""
-        ### ℹ️ Uitleg
-        **Om voor een dienstrol met 1 type voertuig te kunnen kiezen**, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn. Een **gemengde dienstrol** kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.
+    st.info("""
+    ### ℹ️ Uitleg
+    **Om voor een dienstrol met 1 type voertuig te kunnen kiezen**, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn. Een **gemengde dienstrol** kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.
 
-        ---
-        #### 🚏 Invulling open plaats
-        De open plaats wordt gepubliceerd voor alle chauffeurs die zich kandidaat wensen te stellen. 
-        Kandidaten worden gerangschikt volgens **stelplaatsanciënniteit**. De eerst gerangschikte neemt de open plaats in.
+    ---
+    #### 🚏 Invulling open plaats
+    De open plaats wordt gepubliceerd voor alle chauffeurs die zich kandidaat wensen te stellen. 
+    Kandidaten worden gerangschikt volgens **stelplaatsanciënniteit**. De eerst gerangschikte neemt de open plaats in.
 
-        ---
-        #### 🔄 Invulling doorgeschoven plaats
-        Chauffeurs mogen steeds een aanvraag via mail doorsturen waarin zij hun voorkeur kenbaar maken voor een andere plaats die op dat moment nog niet open staat, maar die ze in de toekomst graag zouden innemen. 
-        Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats inneemt, wordt deze plaats **niet meer uitgehangen** maar onmiddellijk ingevuld. Hiervoor worden de aanvragen nagekeken op **stelplaatsanciënniteit**. De chauffeur met de hoogste stelplaatsanciënniteit zal deze plaats toegewezen krijgen.
-        """, icon="ℹ️")
+    ---
+    #### 🔄 Invulling doorgeschoven plaats
+    Chauffeurs mogen steeds een aanvraag via mail doorsturen waarin zij hun voorkeur kenbaar maken voor een andere plaats die op dat moment nog niet open staat, maar die ze in de toekomst graag zouden innemen. 
+    Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats inneemt, wordt deze plaats **niet meer uitgehangen** maar onmiddellijk ingevuld. Hiervoor worden de aanvragen nagekeken op **stelplaatsanciënniteit**. De chauffeur met de hoogste stelplaatsanciënniteit zal deze plaats toegewezen krijgen.
+    """, icon="ℹ️")
 
     personeelsnummer = st.text_input("Personeelsnummer")
     persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
 
-    if personeelsnummer and persoonlijke_code:
+    if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
+        st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
+
+    if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
         try:
             df_personeel = pd.read_csv(google_sheet_url, dtype=str)
             df_personeel.columns = df_personeel.columns.str.strip().str.lower()
@@ -184,6 +192,5 @@ if not is_admin:
                                     st.json(resultaat)
                         except Exception as e:
                             st.error(f"❌ Fout bij verzenden: {e}")
-
         except Exception as e:
             st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
