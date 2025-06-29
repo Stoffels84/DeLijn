@@ -55,26 +55,22 @@ if is_admin:
         df["Aantal voorkeuren"] = df["Voorkeuren"].apply(lambda x: len(str(x).split(",")))
         df["Bevestigd"] = df["Bevestiging plaatsvoorkeur"].map({"True": "✅", "False": "❌"})
 
-        # Filters
+        # Filteren op personeelsnummer en dienst
         st.sidebar.header("🔎 Filters")
-        coaches = sorted(df["Teamcoach"].dropna().unique())
-        gekozen_coach = st.sidebar.multiselect("Filter op teamcoach", coaches, default=coaches)
         zoeknummer = st.sidebar.text_input("Zoek op personeelsnummer")
         alle_voorkeuren = df["Voorkeuren"].str.cat(sep=", ").split(",")
         diensten_uniek = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
         gekozen_diensten = st.sidebar.multiselect("Filter op dienst", diensten_uniek)
 
-        df_filtered = df[df["Teamcoach"].isin(gekozen_coach)]
+        df_filtered = df.copy()
         if zoeknummer:
             df_filtered = df_filtered[df_filtered["Personeelsnummer"].str.contains(zoeknummer.strip(), na=False)]
         if gekozen_diensten:
             df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(lambda x: any(d in x for d in gekozen_diensten))]
 
-        # Tabel inzendingen
         st.subheader("📋 Overzicht van inzendingen")
         st.dataframe(df_filtered.sort_values("Ingevuld op", ascending=False), use_container_width=True)
 
-        # Grafiek
         st.subheader("📊 Populairste voorkeuren")
         telling = pd.Series([v.strip() for v in alle_voorkeuren if v.strip()]).value_counts()
         fig, ax = plt.subplots()
@@ -87,7 +83,6 @@ if is_admin:
         ax.set_ylabel("Dienst")
         st.pyplot(fig)
 
-        # Overzicht per dienst + Excel
         st.subheader("👥 Overzicht per dienst")
 
         excel_output = io.BytesIO()
@@ -102,20 +97,20 @@ if is_admin:
             df_dienst["Personeelsnummer"] = df_dienst["Personeelsnummer"].astype(int)
             df_dienst = df_dienst.sort_values("Personeelsnummer")
 
+            st.markdown(f"### 🚌 {dienst}")
             if df_dienst.empty:
-                st.markdown(f"### 🚍 {dienst}")
                 st.info("⚠️ Geen geldige inschrijvingen gevonden.")
                 continue
 
-            st.markdown(f"### 🚍 {dienst}")
             st.dataframe(df_dienst, use_container_width=True)
 
+            titel = dienst[:31]
             if ws_first:
                 ws = wb.active
-                ws.title = dienst[:31]
+                ws.title = titel
                 ws_first = False
             else:
-                ws = wb.create_sheet(title=dienst[:31])
+                ws = wb.create_sheet(title=titel)
 
             ws.append(["Personeelsnummer", "Naam"])
             for _, row in df_dienst.iterrows():
