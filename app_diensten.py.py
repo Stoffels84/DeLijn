@@ -58,8 +58,12 @@ if is_admin:
         # Filteren op personeelsnummer en dienst
         st.sidebar.header("🔎 Filters")
         zoeknummer = st.sidebar.text_input("Zoek op personeelsnummer")
-        alle_voorkeuren = df["Voorkeuren"].str.cat(sep=", ").split(",")
-        diensten_uniek = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
+        alle_voorkeuren = df["Voorkeuren"].dropna().astype(str).str.cat(sep=",").split(",")
+alle_voorkeuren = [v.strip() for v in alle_voorkeuren if v.strip()]
+diensten_uniek = sorted(set(alle_voorkeuren))
+
+if not diensten_uniek:
+    st.warning("⚠️ Geen unieke diensten gevonden in de data. Controleer of de kolom 'Voorkeuren' correct gevuld is.")
         gekozen_diensten = st.sidebar.multiselect("Filter op dienst", diensten_uniek)
 
         df_filtered = df.copy()
@@ -89,8 +93,9 @@ if is_admin:
         wb = Workbook()
         ws_first = True
 
-        for dienst in diensten_uniek:
-            df_dienst = df[df["Voorkeuren"].apply(lambda x: dienst in [v.strip() for v in str(x).split(",")])].copy()
+     for dienst in diensten_uniek:
+    df_dienst = df[df["Voorkeuren"].fillna("").apply(lambda x: dienst in [v.strip() for v in str(x).split(",")])].copy()
+
             df_dienst = df_dienst[["Personeelsnummer", "Naam"]].dropna()
             df_dienst["Personeelsnummer"] = pd.to_numeric(df_dienst["Personeelsnummer"], errors="coerce")
             df_dienst = df_dienst.dropna(subset=["Personeelsnummer"])
@@ -115,6 +120,9 @@ if is_admin:
             ws.append(["Personeelsnummer", "Naam"])
             for _, row in df_dienst.iterrows():
                 ws.append([row["Personeelsnummer"], row["Naam"]])
+if not wb.sheetnames:
+    st.warning("⚠️ Geen werkbladen aangemaakt. Mogelijk waren er geen deelnemers per dienst.")
+    st.stop()
 
         wb.save(excel_output)
         st.download_button(
