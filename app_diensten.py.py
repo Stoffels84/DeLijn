@@ -11,7 +11,6 @@ from fpdf import FPDF
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
-google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
 
 try:
     wachtwoord_admin = st.secrets["ADMIN_WACHTWOORD"]
@@ -19,15 +18,9 @@ except KeyError:
     st.error("ADMIN_WACHTWOORD ontbreekt in je secrets.toml. Voeg dit toe.")
     st.stop()
 
+# ====== Functies ======
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
-
-def haal_eerste_geldige_inzending(gevonden_lijst):
-    if not gevonden_lijst:
-        return None
-    if len(gevonden_lijst) > 1:
-        st.warning("⚠️ Meerdere inzendingen gevonden. Eerste wordt gebruikt.")
-    return gevonden_lijst[0]
 
 def bepaal_datum_invoer(bestaande_invoer, fallback_datum=None):
     try:
@@ -47,7 +40,7 @@ class DienstPDF(FPDF):
     def dienst_titel(self, dienst):
         self.ln(10)
         self.set_font("Arial", "B", 11)
-        self.cell(0, 10, dienst, ln=True)
+        self.cell(0, 10, dienst[:50], ln=True)  # Max 50 tekens
 
     def dienst_tabel(self, personen):
         self.set_font("Arial", "", 10)
@@ -62,6 +55,12 @@ st.markdown("""
     <style>
     .block-container {padding-left: 1rem !important; padding-right: 1rem !important;}
     div.stButton > button {width: 100% !important; padding: 0.75rem; font-size: 1rem;}
+    @media screen and (max-width: 768px) {
+        div[data-testid="stSidebar"] {display: none;}
+        .block-container {padding: 0.5rem !important;}
+        div.stButton > button {font-size: 0.9rem;}
+        h1, h2, h3 {font-size: 1.25rem;}
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -88,6 +87,11 @@ if is_admin:
         df["Voorkeuren"] = df["Voorkeuren"].fillna("")
         df["Personeelsnummer"] = df["Personeelsnummer"].astype(str).str.strip()
         df["Ingevuld op"] = pd.to_datetime(df["Ingevuld op"], dayfirst=True, errors="coerce")
+
+        foutieve_datums = df[df["Ingevuld op"].isna()]
+        if not foutieve_datums.empty:
+            st.warning(f"⚠️ {len(foutieve_datums)} inzending(en) met foutieve of ontbrekende datum worden genegeerd in de sortering.")
+
         df["Aantal voorkeuren"] = df["Voorkeuren"].apply(lambda x: len(str(x).split(",")))
         df["Bevestigd"] = df["Bevestiging plaatsvoorkeur"].map({"True": "✅", "False": "❌"})
 
@@ -139,28 +143,26 @@ if is_admin:
             st.markdown(f"### 🚌 {dienst}")
             if df_dienst.empty:
                 st.info("⚠️ Geen geldige inschrijvingen gevonden.")
-                continue
-
-            st.dataframe(df_dienst, use_container_width=True)
-
-            titel = dienst[:31]
-            if ws_first:
-                ws = wb.active
-                ws.title = titel
-                ws_first = False
             else:
-                ws = wb.create_sheet(title=titel)
+                st.dataframe(df_dienst, use_container_width=True)
 
-            ws.append(["Personeelsnummer", "Naam"])
-            for _, row in df_dienst.iterrows():
-                ws.append([row["Personeelsnummer"], row["Naam"]])
+                if ws_first:
+                    ws = wb.active
+                    ws.title = dienst[:31]
+                    ws_first = False
+                else:
+                    ws = wb.create_sheet(title=dienst[:31])
+
+                ws.append(["Personeelsnummer", "Naam"])
+                for _, row in df_dienst.iterrows():
+                    ws.append([row["Personeelsnummer"], row["Naam"]])
 
             pdf.dienst_titel(dienst)
             pdf.dienst_tabel(df_dienst.to_dict(orient="records"))
 
         wb.save(excel_output)
         st.download_button(
-            label="📥 Download Excel-overzicht per dienst",
+            label="📅 Download Excel-overzicht per dienst",
             data=excel_output.getvalue(),
             file_name="Overzicht_per_dienst.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
