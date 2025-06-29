@@ -51,7 +51,7 @@ if is_admin:
 
         df["Voorkeuren"] = df["Voorkeuren"].fillna("")
         df["Personeelsnummer"] = df["Personeelsnummer"].astype(str).str.strip()
-        df["Ingevuld op"] = pd.to_datetime(df["Ingevuld op"], dayfirst=True, errors="coerce")
+        df["Ingevuld op"] = pd.to_datetime(df["Ingevuld op"], errors="coerce")
         df["Aantal voorkeuren"] = df["Voorkeuren"].apply(lambda x: len(str(x).split(",")))
         df["Bevestigd"] = df["Bevestiging plaatsvoorkeur"].map({"True": "✅", "False": "❌"})
 
@@ -204,8 +204,8 @@ if not is_admin:
                             "Teamcoach": coach,
                             "Voorkeuren": ", ".join(volgorde),
                             "Bevestiging plaatsvoorkeur": "True",
-                            "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%d/%m/%Y %H:%M:%S")) if bestaande_data else datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-                            "Laatste aanpassing": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                            "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+"Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         try:
                             with st.spinner("Gegevens worden verwerkt..."):
