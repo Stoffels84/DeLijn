@@ -76,7 +76,7 @@ if not is_admin:
     df = pd.DataFrame(response.json())
 
     try:
-    alle_voorkeuren = df["Voorkeuren"].str.cat(sep=", ").split(",")
+        alle_voorkeuren = df["Voorkeuren"].str.cat(sep=", ").split(",")
     unieke_diensten = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
     if not unieke_diensten:
         raise ValueError
