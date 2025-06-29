@@ -78,7 +78,7 @@ if not is_admin:
     alle_voorkeuren = df["Voorkeuren"].str.cat(sep=", ").split(",")
     unieke_diensten = sorted(set(v.strip() for v in alle_voorkeuren if v.strip()))
 
-    geselecteerde_voorkeuren = sort_items(unieke_diensten, direction="vertical", label="📌 Rangschik je voorkeuren")
+    geselecteerde_voorkeuren, _ = sort_items(unieke_diensten, direction="vertical", label="📌 Rangschik je voorkeuren")
 
     if st.button("✅ Verzenden"):
         if not naam or not personeelsnummer or not bevestiging or not geselecteerde_voorkeuren:
