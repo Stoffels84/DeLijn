@@ -84,7 +84,7 @@ if is_admin:
         telling = pd.Series(alle_voorkeuren_flat).value_counts()
         top15 = telling.head(15)
         fig, ax = plt.subplots()
-            if not top15.empty:
+        if not top15.empty:
             kleuren = ['#DAA520' if dienst == top15.idxmax() else '#CCCCCC' for dienst in top15.index]
     top15.plot(kind="barh", ax=ax, edgecolor="black", color=kleuren)
     ax.invert_yaxis()
