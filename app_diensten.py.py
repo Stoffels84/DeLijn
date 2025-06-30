@@ -73,10 +73,9 @@ if is_admin:
         if zoeknummer:
             df_filtered = df_filtered[df_filtered["Personeelsnummer"].str.contains(zoeknummer.strip(), na=False)]
         if gekozen_diensten:
-            df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(
-                lambda x: any(d in x for d in gekozen_diensten)
-            )]
-
+    df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(
+        lambda x: any(d == v.strip() for v in str(x).split(",") for d in gekozen_diensten)
+    )]
         st.subheader("📋 Overzicht van inzendingen")
         st.dataframe(df_filtered.sort_values("Ingevuld op", ascending=False), use_container_width=True)
 
@@ -85,8 +84,17 @@ if is_admin:
         telling = pd.Series(alle_voorkeuren_flat).value_counts()
         top15 = telling.head(15)
         fig, ax = plt.subplots()
-        kleuren = ['#DAA520' if dienst == top15.idxmax() else '#CCCCCC' for dienst in top15.index]
-        top15.plot(kind="barh", ax=ax, edgecolor="black", color=kleuren)
+        if not top15.empty:
+    kleuren = ['#DAA520' if dienst == top15.idxmax() else '#CCCCCC' for dienst in top15.index]
+    top15.plot(kind="barh", ax=ax, edgecolor="black", color=kleuren)
+    ax.invert_yaxis()
+    ax.set_title("Top 15 Populairste Diensten")
+    ax.set_xlabel("Aantal voorkeuren")
+    ax.set_ylabel("Dienst")
+    st.pyplot(fig)
+else:
+    st.info("📉 Nog geen voorkeuren beschikbaar voor de grafiek.")
+
         ax.invert_yaxis()
         ax.set_title("Top 15 Populairste Diensten")
         ax.set_xlabel("Aantal voorkeuren")
