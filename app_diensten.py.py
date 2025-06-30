@@ -93,8 +93,6 @@ if is_admin:
         ax.set_xlabel("Aantal voorkeuren")
         ax.set_ylabel("Dienst")
         st.pyplot(fig)
-        else:
-        st.info("📉 Nog geen voorkeuren beschikbaar voor de grafiek.")
 
 
         # ========== Overzicht per dienst ==========
