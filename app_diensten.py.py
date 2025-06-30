@@ -154,6 +154,22 @@ if is_admin:
 
 # ====== GEBRUIKERSPAGINA ======
 if not is_admin:
+
+    # 🔽 Eerst de uitlegtekst tonen vóór de titel
+    st.info("""
+    ### ℹ️ Uitleg
+    **Om voor een dienstrol met 1 type voertuig te kunnen kiezen**, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn. Een **gemengde dienstrol** kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.
+
+    ---
+    #### 🚏 Invulling open plaats
+    De open plaats wordt gepubliceerd voor alle chauffeurs die zich kandidaat wensen te stellen. 
+    Kandidaten worden gerangschikt volgens **stelplaatsanciënniteit**. De eerst gerangschikte neemt de open plaats in.
+
+    ---
+    #### 🔄 Invulling doorgeschoven plaats
+    Chauffeurs mogen steeds een aanvraag via mail doorsturen waarin zij hun voorkeur kenbaar maken voor een andere plaats die op dat moment nog niet open staat, maar die ze in de toekomst graag zouden innemen. 
+    Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats inneemt, wordt deze plaats **niet meer uitgehangen** maar onmiddellijk ingevuld. Hiervoor worden de aanvragen nagekeken op **stelplaatsanciënniteit**. De chauffeur met de hoogste stelplaatsanciënniteit zal deze plaats toegewezen krijgen.
+    """, icon="ℹ️")
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
     # ... bestaande uitlegteksten ...
