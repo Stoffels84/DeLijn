@@ -80,7 +80,7 @@ if is_admin:
         st.dataframe(df_filtered.sort_values("Ingevuld op", ascending=False), use_container_width=True)
 
         # ========== Populairste diensten ==========
-      st.subheader("📊 Populairste voorkeuren")
+     st.subheader("📊 Populairste voorkeuren")
         telling = pd.Series(alle_voorkeuren_flat).value_counts()
         top15 = telling.head(15)
         fig, ax = plt.subplots()
