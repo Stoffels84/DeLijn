@@ -97,12 +97,6 @@ if is_admin:
         st.info("📉 Nog geen voorkeuren beschikbaar voor de grafiek.")
 
 
-        ax.invert_yaxis()
-        ax.set_title("Top 15 Populairste Diensten")
-        ax.set_xlabel("Aantal voorkeuren")
-        ax.set_ylabel("Dienst")
-        st.pyplot(fig)
-
         # ========== Overzicht per dienst ==========
         st.subheader("👥 Overzicht per dienst")
 
