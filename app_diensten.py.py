@@ -154,7 +154,7 @@ if not is_admin:
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
 st.info("""
-### ℹ️Om voor een dienstrol met 1 type voertuig te kunnen kiezen, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn. Een gemengde dienstrol kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.
+### ℹ️Om voor een dienstrol met 1 type voertuig te kunnen kiezen, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn. Een gemengde dienstrol kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.""")
 
 st.info("""
  ### ℹ️Invulling open plaats
