@@ -159,8 +159,9 @@ st.info("""
 st.info("""
 *** ℹ️Invulling open plaats
 De open plaats wordt gepubliceerd voor alle chauffeurs die zich kandidaat wensen te stellen. 
-Kandidaten worden gerangschikt volgens stelplaatsanciënniteit. De eerst gerangschikte neemt de open plaats in. 
+Kandidaten worden gerangschikt volgens stelplaatsanciënniteit. De eerst gerangschikte neemt de open plaats in.""") 
 
+st.info("""
 *** ℹ️Invulling doorgeschoven plaats
 Chauffeurs mogen steeds een aanvraag via mail doorsturen waarin zij hun voorkeur kenbaar maken voor een andere plaats die op dat moment nog niet open staat, maar die ze in de toekomst graag zouden innemen. 
 Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats inneemt, wordt deze plaats niet meer uitgehangen maar onmiddellijk ingevuld. Hiervoor worden de aanvragen nagekeken op stelplaatsanciënniteit. De chauffeur met de hoogste stelplaatsanciënniteit zal deze plaats toegewezen krijgen.
