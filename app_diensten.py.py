@@ -170,10 +170,10 @@ Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats 
 personeelsnummer = st.text_input("Personeelsnummer")
 persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
 
-    if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
+if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
 
-    if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
+if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
         try:
             df_personeel = pd.read_csv(google_sheet_url, dtype=str)
             df_personeel.columns = df_personeel.columns.str.strip().str.lower()
