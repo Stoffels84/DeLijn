@@ -213,7 +213,7 @@ if not is_admin:
                     "MN24 (Late Nachtdiensten Bustrammix groep1","MN24 (Late Nachtdiensten Bustrammix groep2","MN24 (Late Nachtdiensten Bustrammix groep3","MN24 (Late Nachtdiensten Bustrammix groep4","MN24 (Late Nachtdiensten Bustrammix groep5","MN24 (Late Nachtdiensten Bustrammix groep6",
                     "BO15 (Onderbroken Diensten Bus groep1)", "BO15 (Onderbroken Diensten Bus groep2)", "BO15 (Onderbroken Diensten Bus groep3)", "BO15 (Onderbroken Diensten Bus groep4)", "BO15 (Onderbroken Diensten Bus groep5)", "BO15 (Onderbroken Diensten Bus groep6)", 
                     "TO15 (Onderbroken Diensten Tram groep1)", "TO15 (Onderbroken Diensten Tram groep2)", "TO15 (Onderbroken Diensten Tram groep3)", "TO15 (Onderbroken Diensten Tram groep4)", "TO15 (Onderbroken Diensten Tram groep5)", "TO15 (Onderbroken Diensten Tram groep6)", 
-                    "MW12 (Bustrammix Weekendrol groep1)""MW12 (Bustrammix Weekendrol groep2)""MW12 (Bustrammix Weekendrol groep3)""MW12 (Bustrammix Weekendrol groep4)""MW12 (Bustrammix Weekendrol groep5)""MW12 (Bustrammix Weekendrol groep6)"
+                    "MW12 (Bustrammix Weekendrol groep1)","MW12 (Bustrammix Weekendrol groep2)","MW12 (Bustrammix Weekendrol groep3)","MW12 (Bustrammix Weekendrol groep4)","MW12 (Bustrammix Weekendrol groep5)","MW12 (Bustrammix Weekendrol groep6)",
                 ]
 
                 ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
