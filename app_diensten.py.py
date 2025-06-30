@@ -150,27 +150,9 @@ if is_admin:
 
 # ====== GEBRUIKERSPAGINA ======
 if not is_admin:
-    # ... je bestaande gebruikersinterfacecode ...
-
-    # Extra filtering van eerder_voorkeuren toevoegen vóór multiselect
-    eerder_voorkeuren = [v for v in eerder_voorkeuren if v in diensten]
-    ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
-    if ongeldige:
-        st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-    st.info("ℹ️ **Om voor een dienstrol met 1 type voertuig te kunnen kiezen, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn.** "
-            "Een gemengde dienstrol kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.")
-
-    st.info("ℹ️ **Invulling open plaats**\n"
-            "De open plaats wordt gepubliceerd voor alle chauffeurs die zich kandidaat wensen te stellen. "
-            "Kandidaten worden gerangschikt volgens stelplaatsanciënniteit. De eerst gerangschikte neemt de open plaats in.")
-
-    st.info("ℹ️ **Invulling doorgeschoven plaats**\n"
-            "Chauffeurs mogen steeds een aanvraag via mail doorsturen waarin zij hun voorkeur kenbaar maken voor een andere plaats die op dat moment nog niet open staat, "
-            "maar die ze in de toekomst graag zouden innemen. Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats inneemt, "
-            "wordt deze plaats niet meer uitgehangen maar onmiddellijk ingevuld. Hiervoor worden de aanvragen nagekeken op stelplaatsanciënniteit. "
-            "De chauffeur met de hoogste stelplaatsanciënniteit zal deze plaats toegewezen krijgen.")
+    # ... bestaande uitlegteksten ...
 
     personeelsnummer = st.text_input("Personeelsnummer")
     persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
@@ -202,20 +184,28 @@ if not is_admin:
                     laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
                     st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
+                # Filter ongeldige diensten uit de eerder opgeslagen voorkeuren
                 diensten = [
-                    "T24 (Tram Laat-Vroeg groep1)","T24 (Tram Laat-Vroeg groep2)","T24 (Tram Laat-Vroeg groep3)","T24 (Tram Laat-Vroeg groep4)","T24 (Tram Laat-Vroeg groep5)","T24 (Tram Laat-Vroeg groep6)", 
-                    "TW24 (Tram Week-Week groep1)","TW24 (Tram Week-Week groep2)","TW24 (Tram Week-Week groep3)","TW24 (Tram Week-Week groep4)","TW24 (Tram Week-Week groep5)","TW24 (Tram Week-Week groep6)", 
-                    "TV12 (Tram Vroeg groep1)","TV12 (Tram Vroeg groep2)","TV12 (Tram Vroeg groep3)","TV12 (Tram Vroeg groep4)","TV12 (Tram Vroeg groep5)","TV12 (Tram Vroeg groep6)", 
-                    "TL12 (Tram Reserve)",
-                    "G09 (Gelede Bus 9 & 11 Laat-Vroeg)", "GW09 (Gelede Bus 9 & 11 Week-Week)", "B24 (Busmix Laat-Vroeg)",
-                    "G70 (Gelede Bus 70 & 71 Laat-Vroeg)", "G10 (Gelede Bus 10 & 12 Laat-Vroeg)", "GW10 (Gelede Bus 10 & 12 Week-Week)",
-                    "S05 (Standaardbus 5 & 33 Laat-Vroeg)", "SW05 (Standaardbus 5 & 33 Week-Week)", "TD12 (Dagdiensten Tram)",
-                    "BD12 (Dagdiensten Bus)", "MV12 (Bustrammix Vroeg)", "ML12 (Bustrammix Reserve)",
-                    "TR15 (Tram Weekend Thuis met Onderbroken Diensten)", "BR15 (Bus Weekend Thuis met Onderbroken Diensten)",
-                    "M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten)", "BN24 (Late Nachtdiensten Bus)",
-                    "TN24 (Late Nachtdiensten Tram)", "MN24 (Late Nachtdiensten Bustrammix)",
+                    "T24 (Tram Laat-Vroeg groep1)", "T24 (Tram Laat-Vroeg groep2)", "T24 (Tram Laat-Vroeg groep3)",
+                    "T24 (Tram Laat-Vroeg groep4)", "T24 (Tram Laat-Vroeg groep5)", "T24 (Tram Laat-Vroeg groep6)",
+                    "TW24 (Tram Week-Week groep1)", "TW24 (Tram Week-Week groep2)", "TW24 (Tram Week-Week groep3)",
+                    "TW24 (Tram Week-Week groep4)", "TW24 (Tram Week-Week groep5)", "TW24 (Tram Week-Week groep6)",
+                    "TV12 (Tram Vroeg groep1)", "TV12 (Tram Vroeg groep2)", "TV12 (Tram Vroeg groep3)",
+                    "TV12 (Tram Vroeg groep4)", "TV12 (Tram Vroeg groep5)", "TV12 (Tram Vroeg groep6)",
+                    "TL12 (Tram Reserve)", "G09 (Gelede Bus 9 & 11 Laat-Vroeg)", "GW09 (Gelede Bus 9 & 11 Week-Week)",
+                    "B24 (Busmix Laat-Vroeg)", "G70 (Gelede Bus 70 & 71 Laat-Vroeg)", "G10 (Gelede Bus 10 & 12 Laat-Vroeg)",
+                    "GW10 (Gelede Bus 10 & 12 Week-Week)", "S05 (Standaardbus 5 & 33 Laat-Vroeg)",
+                    "SW05 (Standaardbus 5 & 33 Week-Week)", "TD12 (Dagdiensten Tram)", "BD12 (Dagdiensten Bus)",
+                    "MV12 (Bustrammix Vroeg)", "ML12 (Bustrammix Reserve)", "TR15 (Tram Weekend Thuis met Onderbroken Diensten)",
+                    "BR15 (Bus Weekend Thuis met Onderbroken Diensten)", "M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten)",
+                    "BN24 (Late Nachtdiensten Bus)", "TN24 (Late Nachtdiensten Tram)", "MN24 (Late Nachtdiensten Bustrammix)",
                     "BO15 (Onderbroken Diensten Bus)", "TO15 (Onderbroken Diensten Tram)", "MW12 (Bustrammix Weekendrol)"
                 ]
+
+                ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
+                eerder_voorkeuren = [v for v in eerder_voorkeuren if v in diensten]
+                if ongeldige:
+                    st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
 
                 geselecteerd = st.multiselect("Selecteer diensten:", diensten, default=eerder_voorkeuren)
                 volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_voorkeuren
@@ -260,3 +250,4 @@ if not is_admin:
                             st.error(f"❌ Fout bij verzenden: {e}")
         except Exception as e:
             st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
+
