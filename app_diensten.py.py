@@ -197,7 +197,10 @@ if not is_admin:
                     st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
                 diensten = [
-                    "T24 (Tram Laat-Vroeg groep1)","T24 (Tram Laat-Vroeg groep2)", "TW24 (Tram Week-Week)", "TV12 (Tram Vroeg)", "TL12 (Tram Reserve)",
+                    "T24 (Tram Laat-Vroeg groep1)","T24 (Tram Laat-Vroeg groep2)","T24 (Tram Laat-Vroeg groep3)","T24 (Tram Laat-Vroeg groep4)","T24 (Tram Laat-Vroeg groep5)","T24 (Tram Laat-Vroeg groep6)", 
+                    "TW24 (Tram Week-Week groep1)","TW24 (Tram Week-Week groep2)","TW24 (Tram Week-Week groep3)","TW24 (Tram Week-Week groep4)","TW24 (Tram Week-Week groep5)","TW24 (Tram Week-Week groep6)", 
+                    "TV12 (Tram Vroeg groep1)","TV12 (Tram Vroeg groep2)","TV12 (Tram Vroeg groep3)","TV12 (Tram Vroeg groep4)","TV12 (Tram Vroeg groep5)","TV12 (Tram Vroeg groep6)", 
+                    "TL12 (Tram Reserve)",
                     "G09 (Gelede Bus 9 & 11 Laat-Vroeg)", "GW09 (Gelede Bus 9 & 11 Week-Week)", "B24 (Busmix Laat-Vroeg)",
                     "G70 (Gelede Bus 70 & 71 Laat-Vroeg)", "G10 (Gelede Bus 10 & 12 Laat-Vroeg)", "GW10 (Gelede Bus 10 & 12 Week-Week)",
                     "S05 (Standaardbus 5 & 33 Laat-Vroeg)", "SW05 (Standaardbus 5 & 33 Week-Week)", "TD12 (Dagdiensten Tram)",
