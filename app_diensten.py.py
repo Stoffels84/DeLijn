@@ -153,28 +153,26 @@ if is_admin:
 if not is_admin:
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-st.info("""
-*** ℹ️Om voor een dienstrol met 1 type voertuig te kunnen kiezen, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn. Een gemengde dienstrol kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.""")
+    st.info("ℹ️ **Om voor een dienstrol met 1 type voertuig te kunnen kiezen, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn.** "
+            "Een gemengde dienstrol kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.")
 
-st.info("""
-*** ℹ️Invulling open plaats<BR>
-De open plaats wordt gepubliceerd voor alle chauffeurs die zich kandidaat wensen te stellen. 
-Kandidaten worden gerangschikt volgens stelplaatsanciënniteit. De eerst gerangschikte neemt de open plaats in.""") 
+    st.info("ℹ️ **Invulling open plaats**\n"
+            "De open plaats wordt gepubliceerd voor alle chauffeurs die zich kandidaat wensen te stellen. "
+            "Kandidaten worden gerangschikt volgens stelplaatsanciënniteit. De eerst gerangschikte neemt de open plaats in.")
 
-st.info("""
-*** ℹ️Invulling doorgeschoven plaats <BR>
-Chauffeurs mogen steeds een aanvraag via mail doorsturen waarin zij hun voorkeur kenbaar maken voor een andere plaats die op dat moment nog niet open staat, maar die ze in de toekomst graag zouden innemen. 
-Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats inneemt, wordt deze plaats niet meer uitgehangen maar onmiddellijk ingevuld. Hiervoor worden de aanvragen nagekeken op stelplaatsanciënniteit. De chauffeur met de hoogste stelplaatsanciënniteit zal deze plaats toegewezen krijgen.
-""")
+    st.info("ℹ️ **Invulling doorgeschoven plaats**\n"
+            "Chauffeurs mogen steeds een aanvraag via mail doorsturen waarin zij hun voorkeur kenbaar maken voor een andere plaats die op dat moment nog niet open staat, "
+            "maar die ze in de toekomst graag zouden innemen. Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats inneemt, "
+            "wordt deze plaats niet meer uitgehangen maar onmiddellijk ingevuld. Hiervoor worden de aanvragen nagekeken op stelplaatsanciënniteit. "
+            "De chauffeur met de hoogste stelplaatsanciënniteit zal deze plaats toegewezen krijgen.")
 
+    personeelsnummer = st.text_input("Personeelsnummer")
+    persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
 
-personeelsnummer = st.text_input("Personeelsnummer")
-persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
-
-if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
+    if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
 
-if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
+    if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
         try:
             df_personeel = pd.read_csv(google_sheet_url, dtype=str)
             df_personeel.columns = df_personeel.columns.str.strip().str.lower()
@@ -237,7 +235,7 @@ if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and le
                             "Voorkeuren": ", ".join(volgorde),
                             "Bevestiging plaatsvoorkeur": "True",
                             "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-"Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
                         try:
                             with st.spinner("Gegevens worden verwerkt..."):
