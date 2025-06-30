@@ -36,7 +36,6 @@ password_input = st.sidebar.text_input("Admin wachtwoord", type="password")
 if hash_password(password_input) == hash_password(wachtwoord_admin):
     is_admin = True
 
-
 # ====== ADMINPAGINA ======
 if is_admin:
     st.markdown("<h1 style='color: #DAA520;'>🔐 Adminoverzicht: Dienstvoorkeuren</h1>", unsafe_allow_html=True)
@@ -151,6 +150,13 @@ if is_admin:
 
 # ====== GEBRUIKERSPAGINA ======
 if not is_admin:
+    # ... je bestaande gebruikersinterfacecode ...
+
+    # Extra filtering van eerder_voorkeuren toevoegen vóór multiselect
+    eerder_voorkeuren = [v for v in eerder_voorkeuren if v in diensten]
+    ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
+    if ongeldige:
+        st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
     st.info("ℹ️ **Om voor een dienstrol met 1 type voertuig te kunnen kiezen, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn.** "
