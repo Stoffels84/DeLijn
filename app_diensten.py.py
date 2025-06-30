@@ -73,7 +73,7 @@ if is_admin:
         if zoeknummer:
             df_filtered = df_filtered[df_filtered["Personeelsnummer"].str.contains(zoeknummer.strip(), na=False)]
         if gekozen_diensten:
-    df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(
+            df_filtered = df_filtered[df_filtered["Voorkeuren"].apply(
         lambda x: any(d == v.strip() for v in str(x).split(",") for d in gekozen_diensten)
     )]
         st.subheader("📋 Overzicht van inzendingen")
