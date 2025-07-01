@@ -218,7 +218,6 @@ if is_admin:
 
     except Exception as e:
         st.error(f"❌ Fout bij ophalen of verwerken gegevens: {e}")
-
 # ====== GEBRUIKERSPAGINA ======
 if not is_admin:
     st.info("""
@@ -274,31 +273,21 @@ if not is_admin:
                     laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
                     st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
-                # Check op verouderde voorkeuren
+                # Stap 1: alle voorkeuren selecteren (vrij)
+                st.markdown("### Stap 1: Selecteer je voorkeuren (vrije keuze)")
+
+                eerder_geldig = [v for v in eerder_voorkeuren if v in diensten]
                 ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
                 if ongeldige:
                     st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
-                eerder_voorkeuren = [v for v in eerder_voorkeuren if v in diensten]
 
-                # Stap 1: rooster kiezen
-                roosteropties = {
-                    "🚋 Tramrooster": diensten_tram,
-                    "🚌 Busrooster": diensten_bus,
-                    "🔀 Gemengd rooster": diensten_gemengd
-                }
-
-                gekozen_rooster = st.selectbox("Stap 1: Kies je type rooster", list(roosteropties.keys()))
-                diensten_in_groep = sorted(roosteropties[gekozen_rooster])
-                eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
-
-                # Stap 2: voorkeuren kiezen + slepen
                 geselecteerd = st.multiselect(
-                    "Stap 2: Selecteer je voorkeuren binnen dit rooster:",
-                    opties := diensten_in_groep,
-                    default=eerder_in_groep
+                    "Kies je voorkeuren uit alle beschikbare diensten:",
+                    opties := sorted(diensten),
+                    default=eerder_geldig
                 )
 
-                volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_in_groep
+                volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_geldig
                 if set(volgorde) != set(geselecteerd):
                     volgorde = geselecteerd
 
@@ -322,7 +311,6 @@ if not is_admin:
                             "Naam": naam,
                             "Teamcoach": coach,
                             "Voorkeuren": ", ".join(volgorde),
-                            "Roostertype": gekozen_rooster,
                             "Bevestiging plaatsvoorkeur": "True",
                             "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -342,4 +330,5 @@ if not is_admin:
                             st.error(f"❌ Fout bij verzenden: {e}")
         except Exception as e:
             st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
+
 
