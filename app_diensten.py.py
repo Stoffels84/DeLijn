@@ -287,16 +287,23 @@ if not is_admin:
                     "🔀 Gemengd rooster": diensten_gemengd
                 }
 
-                gekozen_rooster = st.selectbox("Stap 1: Kies je type rooster", list(roosteropties.keys()))
-                diensten_in_groep = sorted(roosteropties[gekozen_rooster])
-                eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
+                # Stap 1: meerdere roostertypes kiezen
+                        gekozen_types = st.multiselect(
+                      "Stap 1: Kies de type roosters waarin je diensten wilt selecteren",
+                        ["🚋 Tramdiensten", "🚌 Busdiensten", "🔀 Gemengde diensten"],
+                        default=["🚋 Tramdiensten"]
+)
 
-                # Stap 2: voorkeuren kiezen + slepen
-                geselecteerd = st.multiselect(
-                    "Stap 2: Selecteer je voorkeuren binnen dit rooster:",
-                    opties := diensten_in_groep,
-                    default=eerder_in_groep
-                )
+diensten_in_groep = []
+if "🚋 Tramdiensten" in gekozen_types:
+    diensten_in_groep += diensten_tram
+if "🚌 Busdiensten" in gekozen_types:
+    diensten_in_groep += diensten_bus
+if "🔀 Gemengde diensten" in gekozen_types:
+    diensten_in_groep += diensten_gemengd
+
+diensten_in_groep = sorted(set(diensten_in_groep))  # unieke diensten
+eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
 
                 volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_in_groep
                 if set(volgorde) != set(geselecteerd):
@@ -322,7 +329,7 @@ if not is_admin:
                             "Naam": naam,
                             "Teamcoach": coach,
                             "Voorkeuren": ", ".join(volgorde),
-                            "Roostertype": gekozen_rooster,
+                            "Roostertype": ", ".join(gekozen_types),
                             "Bevestiging plaatsvoorkeur": "True",
                             "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
