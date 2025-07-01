@@ -206,7 +206,27 @@ if not is_admin:
                     st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
                 # Definitieve lijst van alle diensten
-                diensten = [tram, bus, gemend]  # Laat hier jouw lijst van alle diensten staan zoals je al had
+               # Drie vaste groepen met dienstrollen
+diensten_tram = [
+    "T24 (Tram Laat-Vroeg groep1)", "T24 (Tram Laat-Vroeg groep2)", "T24 (Tram Laat-Vroeg groep3)",
+    "T24 (Tram Laat-Vroeg groep4)", "T24 (Tram Laat-Vroeg groep5)", "T24 (Tram Laat-Vroeg groep6)"
+]
+
+diensten_bus = [
+    "S05 (Standaardbus 5 & 33 Laat-Vroeg groep1)", "S05 (Standaardbus 5 & 33 Laat-Vroeg groep2)", 
+    "S05 (Standaardbus 5 & 33 Laat-Vroeg groep3)", "S05 (Standaardbus 5 & 33 Laat-Vroeg groep4)", 
+    "S05 (Standaardbus 5 & 33 Laat-Vroeg groep5)", "S05 (Standaardbus 5 & 33 Laat-Vroeg groep6)"
+]
+
+diensten_gemengd = [
+    "MW12 (Bustrammix Weekendrol groep1)", "MW12 (Bustrammix Weekendrol groep2)",
+    "MW12 (Bustrammix Weekendrol groep3)", "MW12 (Bustrammix Weekendrol groep4)",
+    "MW12 (Bustrammix Weekendrol groep5)", "MW12 (Bustrammix Weekendrol groep6)"
+]
+
+# Volledige lijst van alle diensten
+diensten = diensten_tram + diensten_bus + diensten_gemengd
+
 
                 # Handmatige indeling in 3 categorieën
                 diensten_tram = [d for d in diensten if d.startswith("T") or d.startswith("TW") or d.startswith("TV") or d.startswith("TD") or d.startswith("TN") or d.startswith("TO") or d.startswith("TR")]
