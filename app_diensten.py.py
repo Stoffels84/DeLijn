@@ -176,7 +176,7 @@ if not is_admin:
         persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
 
     if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
-        st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
+        st.warning("De persoonlijke code moet exact 4 cijfers bevatten. Dit zijn de laatste 4 cijfers van het rijksregister.")
 
     if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
         try:
@@ -206,7 +206,7 @@ if not is_admin:
                     st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
                 # Definitieve lijst van alle diensten
-                diensten = [...]  # Laat hier jouw lijst van alle diensten staan zoals je al had
+                diensten = [tram, bus, gemend]  # Laat hier jouw lijst van alle diensten staan zoals je al had
 
                 # Handmatige indeling in 3 categorieën
                 diensten_tram = [d for d in diensten if d.startswith("T") or d.startswith("TW") or d.startswith("TV") or d.startswith("TD") or d.startswith("TN") or d.startswith("TO") or d.startswith("TR")]
