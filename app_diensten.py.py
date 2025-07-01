@@ -288,7 +288,7 @@ if not is_admin:
                 }
 
                 # Stap 1: meerdere roostertypes kiezen
-                    gekozen_types = st.multiselect(
+                gekozen_types = st.multiselect(
                     "Stap 1: Kies de type roosters waarin je diensten wilt selecteren",
                     ["🚋 Tramdiensten", "🚌 Busdiensten", "🔀 Gemengde diensten"],
                     default=["🚋 Tramdiensten"]
