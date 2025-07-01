@@ -294,13 +294,13 @@ if not is_admin:
                     default=["🚋 Tramdiensten"]
                 )
 
-diensten_in_groep = []
-if "🚋 Tramdiensten" in gekozen_types:
-    diensten_in_groep += diensten_tram
-if "🚌 Busdiensten" in gekozen_types:
-    diensten_in_groep += diensten_bus
-if "🔀 Gemengde diensten" in gekozen_types:
-    diensten_in_groep += diensten_gemengd
+                    diensten_in_groep = []
+                if "🚋 Tramdiensten" in gekozen_types:
+                    diensten_in_groep += diensten_tram
+                if "🚌 Busdiensten" in gekozen_types:
+                    diensten_in_groep += diensten_bus
+                if "🔀 Gemengde diensten" in gekozen_types:
+                       diensten_in_groep += diensten_gemengd
 
 diensten_in_groep = sorted(set(diensten_in_groep))  # unieke diensten
 eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
