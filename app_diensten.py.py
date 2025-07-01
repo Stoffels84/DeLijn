@@ -280,7 +280,7 @@ if not is_admin:
                     st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
                 eerder_voorkeuren = [v for v in eerder_voorkeuren if v in diensten]
 
-                # Stap 1: meerdere roostertypes kiezen
+                # Stap 1: roostertypes kiezen
                 gekozen_types = st.multiselect(
                     "Stap 1: Kies de type roosters waarin je diensten wilt selecteren",
                     ["🚋 Tramdiensten", "🚌 Busdiensten", "🔀 Gemengde diensten"],
@@ -288,14 +288,33 @@ if not is_admin:
                 )
 
                 diensten_in_groep = []
-                if "🚋 Tramdiensten" in gekozen_types:
-                    diensten_in_groep += diensten_tram
-                if "🚌 Busdiensten" in gekozen_types:
-                    diensten_in_groep += diensten_bus
-                if "🔀 Gemengde diensten" in gekozen_types:
-                    diensten_in_groep += diensten_gemengd
+                gekozen_filters = []
 
-                diensten_in_groep = sorted(set(diensten_in_groep))  # unieke diensten
+                if "🚋 Tramdiensten" in gekozen_types:
+                    st.markdown("#### 🚋 Filter tramdiensten")
+                    rooster = st.selectbox("Kies een tramrooster", sorted(set(d.split(" ")[0] for d in diensten_tram)), key="rooster_tram")
+                    groep = st.selectbox("Kies een tramgroep", [f"groep{i}" for i in range(1, 7)], key="groep_tram")
+                    gefilterd = [d for d in diensten_tram if rooster in d and groep in d]
+                    diensten_in_groep += gefilterd
+                    gekozen_filters.append(f"{rooster} {groep} (Tram)")
+
+                if "🚌 Busdiensten" in gekozen_types:
+                    st.markdown("#### 🚌 Filter busdiensten")
+                    rooster = st.selectbox("Kies een busrooster", sorted(set(d.split(" ")[0] for d in diensten_bus)), key="rooster_bus")
+                    groep = st.selectbox("Kies een busgroep", [f"groep{i}" for i in range(1, 7)], key="groep_bus")
+                    gefilterd = [d for d in diensten_bus if rooster in d and groep in d]
+                    diensten_in_groep += gefilterd
+                    gekozen_filters.append(f"{rooster} {groep} (Bus)")
+
+                if "🔀 Gemengde diensten" in gekozen_types:
+                    st.markdown("#### 🔀 Filter gemengde diensten")
+                    rooster = st.selectbox("Kies een gemengd rooster", sorted(set(d.split(" ")[0] for d in diensten_gemengd)), key="rooster_mix")
+                    groep = st.selectbox("Kies een gemengde groep", [f"groep{i}" for i in range(1, 7)], key="groep_mix")
+                    gefilterd = [d for d in diensten_gemengd if rooster in d and groep in d]
+                    diensten_in_groep += gefilterd
+                    gekozen_filters.append(f"{rooster} {groep} (Gemengd)")
+
+                diensten_in_groep = sorted(set(diensten_in_groep))
                 eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
 
                 # Stap 2: voorkeuren kiezen + slepen
@@ -329,7 +348,7 @@ if not is_admin:
                             "Naam": naam,
                             "Teamcoach": coach,
                             "Voorkeuren": ", ".join(volgorde),
-                            "Roostertype": ", ".join(gekozen_types),
+                            "Roostertype": ", ".join(gekozen_filters),
                             "Bevestiging plaatsvoorkeur": "True",
                             "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -350,3 +369,4 @@ if not is_admin:
 
         except Exception as e:
             st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
+
