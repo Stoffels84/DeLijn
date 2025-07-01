@@ -292,27 +292,36 @@ if not is_admin:
 
                 if "🚋 Tramdiensten" in gekozen_types:
                     st.markdown("#### 🚋 Filter tramdiensten")
-                    rooster = st.selectbox("Kies een tramrooster", sorted(set(d.split(" ")[0] for d in diensten_tram)), key="rooster_tram")
-                    groep = st.selectbox("Kies een tramgroep", [f"groep{i}" for i in range(1, 7)], key="groep_tram")
-                    gefilterd = [d for d in diensten_tram if rooster in d and groep in d]
+                    roosters_tram = st.multiselect("Kies één of meerdere tramroosters", sorted(set(d.split(" ")[0] for d in diensten_tram)), key="roosters_tram")
+                    groepen_tram = st.multiselect("Kies één of meerdere tramgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_tram")
+                    gefilterd = [
+                        d for d in diensten_tram
+                        if any(r in d for r in roosters_tram) and any(g in d for g in groepen_tram)
+                    ]
                     diensten_in_groep += gefilterd
-                    gekozen_filters.append(f"{rooster} {groep} (Tram)")
+                    gekozen_filters.extend([f"{r} {g} (Tram)" for r in roosters_tram for g in groepen_tram])
 
                 if "🚌 Busdiensten" in gekozen_types:
                     st.markdown("#### 🚌 Filter busdiensten")
-                    rooster = st.selectbox("Kies een busrooster", sorted(set(d.split(" ")[0] for d in diensten_bus)), key="rooster_bus")
-                    groep = st.selectbox("Kies een busgroep", [f"groep{i}" for i in range(1, 7)], key="groep_bus")
-                    gefilterd = [d for d in diensten_bus if rooster in d and groep in d]
+                    roosters_bus = st.multiselect("Kies één of meerdere busroosters", sorted(set(d.split(" ")[0] for d in diensten_bus)), key="roosters_bus")
+                    groepen_bus = st.multiselect("Kies één of meerdere busgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_bus")
+                    gefilterd = [
+                        d for d in diensten_bus
+                        if any(r in d for r in roosters_bus) and any(g in d for g in groepen_bus)
+                    ]
                     diensten_in_groep += gefilterd
-                    gekozen_filters.append(f"{rooster} {groep} (Bus)")
+                    gekozen_filters.extend([f"{r} {g} (Bus)" for r in roosters_bus for g in groepen_bus])
 
                 if "🔀 Gemengde diensten" in gekozen_types:
                     st.markdown("#### 🔀 Filter gemengde diensten")
-                    rooster = st.selectbox("Kies een gemengd rooster", sorted(set(d.split(" ")[0] for d in diensten_gemengd)), key="rooster_mix")
-                    groep = st.selectbox("Kies een gemengde groep", [f"groep{i}" for i in range(1, 7)], key="groep_mix")
-                    gefilterd = [d for d in diensten_gemengd if rooster in d and groep in d]
+                    roosters_mix = st.multiselect("Kies één of meerdere gemengde roosters", sorted(set(d.split(" ")[0] for d in diensten_gemengd)), key="roosters_mix")
+                    groepen_mix = st.multiselect("Kies één of meerdere gemengde groepen", [f"groep{i}" for i in range(1, 7)], key="groepen_mix")
+                    gefilterd = [
+                        d for d in diensten_gemengd
+                        if any(r in d for r in roosters_mix) and any(g in d for g in groepen_mix)
+                    ]
                     diensten_in_groep += gefilterd
-                    gekozen_filters.append(f"{rooster} {groep} (Gemengd)")
+                    gekozen_filters.extend([f"{r} {g} (Gemengd)" for r in roosters_mix for g in groepen_mix])
 
                 diensten_in_groep = sorted(set(diensten_in_groep))
                 eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
@@ -369,3 +378,4 @@ if not is_admin:
 
         except Exception as e:
             st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
+
