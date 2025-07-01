@@ -150,12 +150,8 @@ if is_admin:
 
     except Exception as e:
         st.error(f"❌ Fout bij ophalen of verwerken gegevens: {e}")
-
-
 # ====== GEBRUIKERSPAGINA ======
 if not is_admin:
-
-    # 🔽 Eerst de uitlegtekst tonen vóór de titel
     st.info("""
     ### ℹ️ Uitleg
     **Om voor een dienstrol met 1 type voertuig te kunnen kiezen**, moet je over de (actieve) kwalificatie beschikken of hiervoor al ingepland zijn. Een **gemengde dienstrol** kan je wel kiezen met maar 1 kwalificatie indien je bereid bent om de andere kwalificatie te behalen.
@@ -170,12 +166,14 @@ if not is_admin:
     Chauffeurs mogen steeds een aanvraag via mail doorsturen waarin zij hun voorkeur kenbaar maken voor een andere plaats die op dat moment nog niet open staat, maar die ze in de toekomst graag zouden innemen. 
     Als een plaats open komt via doorschuiven omdat een chauffeur een andere plaats inneemt, wordt deze plaats **niet meer uitgehangen** maar onmiddellijk ingevuld. Hiervoor worden de aanvragen nagekeken op **stelplaatsanciënniteit**. De chauffeur met de hoogste stelplaatsanciënniteit zal deze plaats toegewezen krijgen.
     """, icon="ℹ️")
+
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-    # ... bestaande uitlegteksten ...
-
-    personeelsnummer = st.text_input("Personeelsnummer")
-    persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
+    col1, col2 = st.columns(2)
+    with col1:
+        personeelsnummer = st.text_input("Personeelsnummer")
+    with col2:
+        persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
 
     if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
@@ -184,8 +182,10 @@ if not is_admin:
         try:
             df_personeel = pd.read_csv(google_sheet_url, dtype=str)
             df_personeel.columns = df_personeel.columns.str.strip().str.lower()
-            match = df_personeel[(df_personeel["personeelsnummer"] == personeelsnummer) &
-                                 (df_personeel["controle"] == persoonlijke_code)]
+            match = df_personeel[
+                (df_personeel["personeelsnummer"] == personeelsnummer) &
+                (df_personeel["controle"] == persoonlijke_code)
+            ]
 
             if match.empty:
                 st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
@@ -194,6 +194,7 @@ if not is_admin:
                 coach = match.iloc[0]["teamcoach"]
                 st.success(f"👋 Welkom terug, **{naam}**!")
 
+                # Ophalen eerdere inzending
                 bestaande_data = None
                 eerder_voorkeuren = []
                 response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
@@ -204,45 +205,37 @@ if not is_admin:
                     laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
                     st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
-                # Filter ongeldige diensten uit de eerder opgeslagen voorkeuren
-                diensten = [
-                    "T24 (Tram Laat-Vroeg groep1)", "T24 (Tram Laat-Vroeg groep2)", "T24 (Tram Laat-Vroeg groep3)",
-                    "T24 (Tram Laat-Vroeg groep4)", "T24 (Tram Laat-Vroeg groep5)", "T24 (Tram Laat-Vroeg groep6)",
-                    "TW24 (Tram Week-Week groep1)", "TW24 (Tram Week-Week groep2)", "TW24 (Tram Week-Week groep3)",
-                    "TW24 (Tram Week-Week groep4)", "TW24 (Tram Week-Week groep5)", "TW24 (Tram Week-Week groep6)",
-                    "TV12 (Tram Vroeg groep1)", "TV12 (Tram Vroeg groep2)", "TV12 (Tram Vroeg groep3)",
-                    "TV12 (Tram Vroeg groep4)", "TV12 (Tram Vroeg groep5)", "TV12 (Tram Vroeg groep6)",
-                    "TL12 (Tram Reserve groep1)","TL12 (Tram Reserve groep2)","TL12 (Tram Reserve groep3)","TL12 (Tram Reserve groep4)","TL12 (Tram Reserve groep5)","TL12 (Tram Reserve groep6)", 
-                    "G09 (Gelede Bus 9 & 11 Laat-Vroeg groep1)","G09 (Gelede Bus 9 & 11 Laat-Vroeg groep2)","G09 (Gelede Bus 9 & 11 Laat-Vroeg groep3)","G09 (Gelede Bus 9 & 11 Laat-Vroeg groep4)","G09 (Gelede Bus 9 & 11 Laat-Vroeg groep5)","G09 (Gelede Bus 9 & 11 Laat-Vroeg groep6)",
-                    "GW09 (Gelede Bus 9 & 11 Week-Week groep1)","GW09 (Gelede Bus 9 & 11 Week-Week groep2)","GW09 (Gelede Bus 9 & 11 Week-Week groep3)","GW09 (Gelede Bus 9 & 11 Week-Week groep4)","GW09 (Gelede Bus 9 & 11 Week-Week groep5)","GW09 (Gelede Bus 9 & 11 Week-Week groep6)",
-                    "B24 (Busmix Laat-Vroeg groep1)","B24 (Busmix Laat-Vroeg groep2)", "B24 (Busmix Laat-Vroeg groep3)","B24 (Busmix Laat-Vroeg groep4)","B24 (Busmix Laat-Vroeg groep5)","B24 (Busmix Laat-Vroeg groep6)",
-                    "G70 (Gelede Bus 70 & 71 Laat-Vroeg groep1)", "G70 (Gelede Bus 70 & 71 Laat-Vroeg groep2)","G70 (Gelede Bus 70 & 71 Laat-Vroeg groep3)","G70 (Gelede Bus 70 & 71 Laat-Vroeg groep4)","G70 (Gelede Bus 70 & 71 Laat-Vroeg groep5)","G70 (Gelede Bus 70 & 71 Laat-Vroeg groep6)",
-                    "G10 (Gelede Bus 10 & 12 Laat-Vroeg groep1)","G10 (Gelede Bus 10 & 12 Laat-Vroeg groep2)","G10 (Gelede Bus 10 & 12 Laat-Vroeg groep3)","G10 (Gelede Bus 10 & 12 Laat-Vroeg groep4)","G10 (Gelede Bus 10 & 12 Laat-Vroeg groep5)","G10 (Gelede Bus 10 & 12 Laat-Vroeg groep6)",
-                    "GW10 (Gelede Bus 10 & 12 Week-Week groep1)","GW10 (Gelede Bus 10 & 12 Week-Week groep2)", "GW10 (Gelede Bus 10 & 12 Week-Week groep3)", "GW10 (Gelede Bus 10 & 12 Week-Week groep4)", "GW10 (Gelede Bus 10 & 12 Week-Week groep5)","GW10 (Gelede Bus 10 & 12 Week-Week groep6)",  
-                    "S05 (Standaardbus 5 & 33 Laat-Vroeg groep1)","S05 (Standaardbus 5 & 33 Laat-Vroeg groep2)","S05 (Standaardbus 5 & 33 Laat-Vroeg groep3)","S05 (Standaardbus 5 & 33 Laat-Vroeg groep4)","S05 (Standaardbus 5 & 33 Laat-Vroeg groep5)","S05 (Standaardbus 5 & 33 Laat-Vroeg groep6)",
-                    "SW05 (Standaardbus 5 & 33 Week-Week groep1)","SW05 (Standaardbus 5 & 33 Week-Week groep2)","SW05 (Standaardbus 5 & 33 Week-Week groep3)", "SW05 (Standaardbus 5 & 33 Week-Week groep4)","SW05 (Standaardbus 5 & 33 Week-Week groep5)","SW05 (Standaardbus 5 & 33 Week-Week groep6)",
-                    "TD12 (Dagdiensten Tram groep1)", "TD12 (Dagdiensten Tram groep2)", "TD12 (Dagdiensten Tram groep3)", "TD12 (Dagdiensten Tram groep4)", "TD12 (Dagdiensten Tram groep5)", "TD12 (Dagdiensten Tram groep6)", 
-                    "BD12 (Dagdiensten Bus groep1)","BD12 (Dagdiensten Bus groep2)","BD12 (Dagdiensten Bus groep3)","BD12 (Dagdiensten Bus groep4)","BD12 (Dagdiensten Bus groep5)","BD12 (Dagdiensten Bus groep6)",
-                    "MV12 (Bustrammix Vroeg groep1)","MV12 (Bustrammix Vroeg groep2)", "MV12 (Bustrammix Vroeg groep3)","MV12 (Bustrammix Vroeg groep4)","MV12 (Bustrammix Vroeg groep5)","MV12 (Bustrammix Vroeg groep6)",
-                    "ML12 (Bustrammix Reserve groep1)", "ML12 (Bustrammix Reserve groep2)", "ML12 (Bustrammix Reserve groep3)", "ML12 (Bustrammix Reserve groep4)", "ML12 (Bustrammix Reserve groep5)", "ML12 (Bustrammix Reserve groep6)", 
-                    "TR15 (Tram Weekend Thuis met Onderbroken Diensten groep1)","TR15 (Tram Weekend Thuis met Onderbroken Diensten groep2)","TR15 (Tram Weekend Thuis met Onderbroken Diensten groep3)","TR15 (Tram Weekend Thuis met Onderbroken Diensten groep4)","TR15 (Tram Weekend Thuis met Onderbroken Diensten groep5)","TR15 (Tram Weekend Thuis met Onderbroken Diensten groep6)",
-                    "BR15 (Bus Weekend Thuis met Onderbroken Diensten groep1)", "BR15 (Bus Weekend Thuis met Onderbroken Diensten groep2)", "BR15 (Bus Weekend Thuis met Onderbroken Diensten groep3)", "BR15 (Bus Weekend Thuis met Onderbroken Diensten groep4)", "BR15 (Bus Weekend Thuis met Onderbroken Diensten groep5)", "BR15 (Bus Weekend Thuis met Onderbroken Diensten groep6)", 
-                    "M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten groep1)","M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten groep2)","M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten groep3)","M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten groep4)","M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten groep5)","M15 (Bustrammix Weekend Thuis Zonder Onderbroken Diensten groep6)",
-                    "BN24 (Late Nachtdiensten Bus groep1)", "BN24 (Late Nachtdiensten Bus groep2)", "BN24 (Late Nachtdiensten Bus groep3)", "BN24 (Late Nachtdiensten Bus groep4)", "BN24 (Late Nachtdiensten Bus groep5)", "BN24 (Late Nachtdiensten Bus groep6)", 
-                    "TN24 (Late Nachtdiensten Tram groep1)","TN24 (Late Nachtdiensten Tram groep2)", "TN24 (Late Nachtdiensten Tram groep3)", "TN24 (Late Nachtdiensten Tram groep4)", "TN24 (Late Nachtdiensten Tram groep5)", "TN24 (Late Nachtdiensten Tram groep6)", 
-                    "MN24 (Late Nachtdiensten Bustrammix groep1)","MN24 (Late Nachtdiensten Bustrammix groep2)","MN24 (Late Nachtdiensten Bustrammix groep3)","MN24 (Late Nachtdiensten Bustrammix groep4)","MN24 (Late Nachtdiensten Bustrammix groep5)","MN24 (Late Nachtdiensten Bustrammix groep6)",
-                    "BO15 (Onderbroken Diensten Bus groep1)", "BO15 (Onderbroken Diensten Bus groep2)", "BO15 (Onderbroken Diensten Bus groep3)", "BO15 (Onderbroken Diensten Bus groep4)", "BO15 (Onderbroken Diensten Bus groep5)", "BO15 (Onderbroken Diensten Bus groep6)", 
-                    "TO15 (Onderbroken Diensten Tram groep1)", "TO15 (Onderbroken Diensten Tram groep2)", "TO15 (Onderbroken Diensten Tram groep3)", "TO15 (Onderbroken Diensten Tram groep4)", "TO15 (Onderbroken Diensten Tram groep5)", "TO15 (Onderbroken Diensten Tram groep6)", 
-                    "MW12 (Bustrammix Weekendrol groep1)","MW12 (Bustrammix Weekendrol groep2)","MW12 (Bustrammix Weekendrol groep3)","MW12 (Bustrammix Weekendrol groep4)","MW12 (Bustrammix Weekendrol groep5)","MW12 (Bustrammix Weekendrol groep6)",
-                ]
+                # Definitieve lijst van alle diensten
+                diensten = [...]  # Laat hier jouw lijst van alle diensten staan zoals je al had
 
+                # Handmatige indeling in 3 categorieën
+                diensten_tram = [d for d in diensten if d.startswith("T") or d.startswith("TW") or d.startswith("TV") or d.startswith("TD") or d.startswith("TN") or d.startswith("TO") or d.startswith("TR")]
+                diensten_bus = [d for d in diensten if d.startswith("B") or d.startswith("G") or d.startswith("S") or d.startswith("BN") or d.startswith("BO") or d.startswith("BR")]
+                diensten_gemengd = [d for d in diensten if d.startswith("M")]
+
+                roosteropties = {
+                    "🚋 Tramrooster": diensten_tram,
+                    "🚌 Busrooster": diensten_bus,
+                    "🔀 Gemengd rooster": diensten_gemengd
+                }
+
+                gekozen_rooster = st.selectbox("Stap 1: Kies je type rooster", list(roosteropties.keys()))
+                diensten_in_groep = sorted(roosteropties[gekozen_rooster])
+
+                # Filter oude voorkeuren
                 ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
-                eerder_voorkeuren = [v for v in eerder_voorkeuren if v in diensten]
+                eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
+
                 if ongeldige:
                     st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
 
-                geselecteerd = st.multiselect("Selecteer diensten:", diensten, default=eerder_voorkeuren)
-                volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_voorkeuren
+                geselecteerd = st.multiselect(
+                    "Stap 2: Selecteer je voorkeuren binnen dit rooster:",
+                    opties := diensten_in_groep,
+                    default=eerder_in_groep
+                )
+
+                volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_in_groep
                 if set(volgorde) != set(geselecteerd):
                     volgorde = geselecteerd
 
@@ -266,6 +259,7 @@ if not is_admin:
                             "Naam": naam,
                             "Teamcoach": coach,
                             "Voorkeuren": ", ".join(volgorde),
+                            "Roostertype": gekozen_rooster,
                             "Bevestiging plaatsvoorkeur": "True",
                             "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -284,4 +278,3 @@ if not is_admin:
                             st.error(f"❌ Fout bij verzenden: {e}")
         except Exception as e:
             st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
-
