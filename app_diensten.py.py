@@ -280,31 +280,30 @@ if not is_admin:
                     st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
                 eerder_voorkeuren = [v for v in eerder_voorkeuren if v in diensten]
 
-                # Stap 1: rooster kiezen
-                roosteropties = {
-                    "🚋 Tramrooster": diensten_tram,
-                    "🚌 Busrooster": diensten_bus,
-                    "🔀 Gemengd rooster": diensten_gemengd
-                }
+                # Stap 1: meerdere roostertypes kiezen
+                gekozen_types = st.multiselect(
+                    "Stap 1: Kies de type roosters waarin je diensten wilt selecteren",
+                    ["🚋 Tramdiensten", "🚌 Busdiensten", "🔀 Gemengde diensten"],
+                    default=["🚋 Tramdiensten"]
+                )
 
-               # Stap 1: meerdere roostertypes kiezen
-gekozen_types = st.multiselect(
-    "Stap 1: Kies de type roosters waarin je diensten wilt selecteren",
-    ["🚋 Tramdiensten", "🚌 Busdiensten", "🔀 Gemengde diensten"],
-    default=["🚋 Tramdiensten"]
-)
+                diensten_in_groep = []
+                if "🚋 Tramdiensten" in gekozen_types:
+                    diensten_in_groep += diensten_tram
+                if "🚌 Busdiensten" in gekozen_types:
+                    diensten_in_groep += diensten_bus
+                if "🔀 Gemengde diensten" in gekozen_types:
+                    diensten_in_groep += diensten_gemengd
 
-diensten_in_groep = []
-if "🚋 Tramdiensten" in gekozen_types:
-    diensten_in_groep += diensten_tram
-if "🚌 Busdiensten" in gekozen_types:
-    diensten_in_groep += diensten_bus
-if "🔀 Gemengde diensten" in gekozen_types:
-    diensten_in_groep += diensten_gemengd
+                diensten_in_groep = sorted(set(diensten_in_groep))  # unieke diensten
+                eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
 
-diensten_in_groep = sorted(set(diensten_in_groep))  # unieke diensten
-eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
-
+                # Stap 2: voorkeuren kiezen + slepen
+                geselecteerd = st.multiselect(
+                    "Stap 2: Selecteer je voorkeuren binnen deze roosters:",
+                    opties := diensten_in_groep,
+                    default=eerder_in_groep
+                )
 
                 volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_in_groep
                 if set(volgorde) != set(geselecteerd):
@@ -348,5 +347,6 @@ eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
                                     st.json(resultaat)
                         except Exception as e:
                             st.error(f"❌ Fout bij verzenden: {e}")
+
         except Exception as e:
             st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
