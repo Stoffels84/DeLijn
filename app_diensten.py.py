@@ -354,8 +354,8 @@ if not is_admin:
 
      # Stap 2: voorkeuren kiezen + slepen
     geselecteerd = st.multiselect(
-        Stap 2: Selecteer je voorkeuren binnen deze roosters:",
-        opties := diensten_in_groep,
+        "Stap 2: Selecteer je voorkeuren binnen deze roosters:",
+        diensten_in_groep,
         default=eerder_in_groep
     )
 
