@@ -238,27 +238,18 @@ if not is_admin:
 
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-    if st.session_state.get("is_mobile"):
+    col1, col2 = st.columns(2)
+    with col1:
         personeelsnummer = st.text_input("Personeelsnummer")
+    with col2:
         persoonlijke_code = st.text_input("Persoonlijke code = laatste 4 cijfers rijksregisternummer", type="password")
-    else:
-        col1, col2 = st.columns(2)
-        with col1:
-            personeelsnummer = st.text_input("Personeelsnummer")
-        with col2:
-            persoonlijke_code = st.text_input("Persoonlijke code = laatste 4 cijfers rijksregisternummer", type="password")
-
 
     if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
 
     if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
         try:
-            @st.cache_data(ttl=300)
-            def laad_personeelslijst():
-                return pd.read_csv(google_sheet_url, dtype=str)
-
-            df_personeel = laad_personeelslijst()
+            df_personeel = pd.read_csv(google_sheet_url, dtype=str)
             df_personeel.columns = df_personeel.columns.str.strip().str.lower()
             match = df_personeel[
                 (df_personeel["personeelsnummer"] == personeelsnummer) &
@@ -359,17 +350,11 @@ if not is_admin:
                 bevestigd = st.checkbox("Ik bevestig mijn voorkeur en ga akkoord met automatische toewijzing bij wijzigingen.")
 
                 if st.button("Verzend je antwoorden"):
-                    if not volgorde:
-                        st.error("❌ Selecteer minstens één dienst.")
-                        st.stop()
                     if not bevestigd:
                         st.error("❌ Bevestig je voorkeur eerst.")
-                        st.stop()
-
-                    if bestaande_data and bestaande_data.get("Voorkeuren", "") == ", ".join(volgorde):
-                        st.warning("Je nieuwe voorkeuren zijn identiek aan de vorige. Geen wijzigingen opgeslagen.")
-                        st.stop()
-
+                    elif not volgorde:
+                        st.error("❌ Selecteer minstens één dienst.")
+                    else:
                         resultaat = {
                             "Personeelsnummer": personeelsnummer,
                             "Naam": naam,
@@ -378,35 +363,21 @@ if not is_admin:
                             "Roostertype": ", ".join(gekozen_filters),
                             "Bevestiging plaatsvoorkeur": "True",
                             "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            "Laatste aanpassing": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+                            "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         }
+                        try:
+                            with st.spinner("Gegevens worden verwerkt..."):
+                                if bestaande_data:
+                                    requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
+                                    st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
+                                else:
+                                    requests.post(sheetdb_url, json={"data": resultaat})
+                                    st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
 
-                try:
-                        with st.spinner("Gegevens worden verwerkt..."):
-                           if bestaande_data:
-                                requests.put(
-                                    f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}",
-                                    json={"data": resultaat}
-                         )
-                        st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
-                      else:
-                        requests.post(
-                            sheetdb_url,
-                            json={"data": resultaat}
-                        )
-                        st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
-                    with st.expander("📄 Bekijk je ingediende gegevens"):
-                        st.json(resultaat)
-
-         except Exception as e:
-                 st.error(f"❌ Fout bij verzenden: {e}")
-
-                    with st.expander("📄 Bekijk je ingediende gegevens"):
-                        st.json(resultaat)
-
-        except Exception as e:
-             st.error(f"❌ Fout bij verzenden: {e}")
-
+                                with st.expander("📋 Bekijk je ingediende gegevens"):
+                                    st.json(resultaat)
+                        except Exception as e:
+                            st.error(f"❌ Fout bij verzenden: {e}")
 
         except Exception as e:
             st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
