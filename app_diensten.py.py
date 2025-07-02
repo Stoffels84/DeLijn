@@ -12,10 +12,6 @@ from openpyxl import Workbook
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
 google_sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSz_OE8qzi-4J4AMEnWgXUM-HqBhiLOVxEQ36AaCzs2xCNBxbF9Hd2ZAn6NcLOKdeMXqvfuPSMI27_/pub?output=csv"
 
-import streamlit.runtime.scriptrunner.script_run_context as context
-st.session_state["is_mobile"] = st.runtime.scriptrunner.get_script_run_ctx().user_agent and "Mobile" in st.runtime.scriptrunner.get_script_run_ctx().user_agent
-
-
 # === Lijsten met alle diensten ===
 diensten_tram = [
     "T24 (Tram Laat-Vroeg groep1)", "T24 (Tram Laat-Vroeg groep2)", "T24 (Tram Laat-Vroeg groep3)",
