@@ -7,6 +7,11 @@ import matplotlib.pyplot as plt
 import hashlib
 import io
 from openpyxl import Workbook
+from datetime import datetime, timedelta
+
+def excel_serial_to_datetime(serial):
+    base_date = datetime(1899, 12, 30)  # Excel's startdatum
+    return base_date + timedelta(days=float(serial))
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
@@ -281,7 +286,7 @@ laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
 try:
     laatst_float = float(laatst)
     laatst_datetime = excel_serial_to_datetime(laatst_float)
-    laatst = laatst_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    laatst = laatst_datetime.strftime("%d/%m/%Y %H:%M:%S")
 except:
     pass  # Laat originele waarde staan als conversie niet lukt
 
