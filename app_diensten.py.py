@@ -246,6 +246,8 @@ if not is_admin:
 
     if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
+    if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
+
 
     if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
         try:
