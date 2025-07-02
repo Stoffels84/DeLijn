@@ -249,7 +249,11 @@ if not is_admin:
 
     if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
         try:
-            df_personeel = pd.read_csv(google_sheet_url, dtype=str)
+            @st.cache_data(ttl=300)
+            def laad_personeelslijst():
+                return pd.read_csv(google_sheet_url, dtype=str)
+
+            df_personeel = laad_personeelslijst()
             df_personeel.columns = df_personeel.columns.str.strip().str.lower()
             match = df_personeel[
                 (df_personeel["personeelsnummer"] == personeelsnummer) &
