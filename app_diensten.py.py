@@ -389,7 +389,7 @@ if not is_admin:
                                json={"data": resultaat}
                          )
                         st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
-                    else:
+                  
                         requests.post(
                             sheetdb_url,
                             json={"data": resultaat}
