@@ -252,35 +252,33 @@ if not is_admin:
     if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
 
-    if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
-        try:
-            df_personeel = pd.read_csv(google_sheet_url, dtype=str)
-            df_personeel.columns = df_personeel.columns.str.strip().str.lower()
-            match = df_personeel[
-                (df_personeel["personeelsnummer"] == personeelsnummer) &
-                (df_personeel["controle"] == persoonlijke_code)
-            ]
+   if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
+    try:
+        df_personeel = pd.read_csv(google_sheet_url, dtype=str)
+        df_personeel.columns = df_personeel.columns.str.strip().str.lower()
+        match = df_personeel[
+            (df_personeel["personeelsnummer"] == personeelsnummer) &
+            (df_personeel["controle"] == persoonlijke_code)
+        ]
 
-            if match.empty:
-                st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
-            else:
-                naam = match.iloc[0]["naam"]
-                coach = match.iloc[0]["teamcoach"]
-                st.success(f"👋 Welkom terug, **{naam}**!")
+        if match.empty:
+            st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
+        else:
+            naam = match.iloc[0]["naam"]
+            coach = match.iloc[0]["teamcoach"]
+            st.success(f"👋 Welkom terug, **{naam}**!")
 
-                # Ophalen eerdere inzending
-                bestaande_data = None
-                eerder_voorkeuren = []
-                response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
-                gevonden = response_check.json()
-                if gevonden:
-                    bestaande_data = gevonden[0]
-                    eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
-                    # ===== Hulpfunctie: Excel-waarde omzetten naar datum =====
+            # Ophalen eerdere inzending
+            bestaande_data = None
+            eerder_voorkeuren = []
+            response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
+            gevonden = response_check.json()
+            if gevonden:
+                bestaande_data = gevonden[0]
+                eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
+    except Exception as e:
+        st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
 
-
-# ===== Laatste wijziging netjes weergeven =====
-laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
 try:
     laatst_float = float(laatst)
     laatst_datetime = excel_serial_to_datetime(laatst_float)
