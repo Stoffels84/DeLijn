@@ -392,9 +392,7 @@ if not is_admin:
 
                        with st.expander("📋 Bekijk je ingediende gegevens"):
                             st.json(resultaat)
-
-                        with st.expander("📋 Bekijk je ingediende gegevens"):
-                                st.json(resultaat)
+                           
                         except Exception as e:
                             st.error(f"❌ Fout bij verzenden: {e}")
 
