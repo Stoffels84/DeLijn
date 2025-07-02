@@ -284,10 +284,8 @@ if not is_admin:
                 for v in bestaande_data.get("Voorkeuren", "").split(",")
                 if v.strip()
             ]
-
                 laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
                 laatst = excel_serial_to_datetime(laatst_raw)
-
                 st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
 
