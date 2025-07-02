@@ -388,11 +388,11 @@ if not is_admin:
                                f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}",
                                json={"data": resultaat}
                          )
-                    st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
-                else:
-                    requests.post(
-                        sheetdb_url,
-                        json={"data": resultaat}
+                        st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
+                    else:
+                        requests.post(
+                            sheetdb_url,
+                            json={"data": resultaat}
                         )
                 st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
 
