@@ -359,48 +359,48 @@ if not is_admin:
         default=eerder_in_groep
     )
 
-                volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_in_groep
-                if set(volgorde) != set(geselecteerd):
+    volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_in_groep
+    if set(volgorde) != set(geselecteerd):
                     volgorde = geselecteerd
 
-                if volgorde:
-                    st.subheader("Jouw voorkeursvolgorde:")
-                    for i, dienst in enumerate(volgorde, start=1):
-                        st.write(f"{i}. {dienst}")
-                else:
-                    st.info("Selecteer eerst één of meerdere diensten.")
+    if volgorde:
+        st.subheader("Jouw voorkeursvolgorde:")
+        for i, dienst in enumerate(volgorde, start=1):
+            st.write(f"{i}. {dienst}")
+    else:
+        st.info("Selecteer eerst één of meerdere diensten.")
 
-                bevestigd = st.checkbox("Ik bevestig mijn voorkeur en ga akkoord met automatische toewijzing bij wijzigingen.")
+    bevestigd = st.checkbox("Ik bevestig mijn voorkeur en ga akkoord met automatische toewijzing bij wijzigingen.")
 
-                if st.button("Verzend je antwoorden"):
-                    if not bevestigd:
-                        st.error("❌ Bevestig je voorkeur eerst.")
-                    elif not volgorde:
+    if st.button("Verzend je antwoorden"):
+        if not bevestigd:
+            st.error("❌ Bevestig je voorkeur eerst.")
+        elif not volgorde:
                         st.error("❌ Selecteer minstens één dienst.")
+        else:
+            resultaat = {
+                "Personeelsnummer": personeelsnummer,
+                "Naam": naam,
+                "Teamcoach": coach,
+                "Voorkeuren": ", ".join(volgorde),
+                "Roostertype": ", ".join(gekozen_filters),
+                "Bevestiging plaatsvoorkeur": "True",
+                "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+            try:
+                with st.spinner("Gegevens worden verwerkt..."):
+                    if bestaande_data:
+                        requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
+                        st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
                     else:
-                        resultaat = {
-                            "Personeelsnummer": personeelsnummer,
-                            "Naam": naam,
-                            "Teamcoach": coach,
-                            "Voorkeuren": ", ".join(volgorde),
-                            "Roostertype": ", ".join(gekozen_filters),
-                            "Bevestiging plaatsvoorkeur": "True",
-                            "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        }
-                        try:
-                            with st.spinner("Gegevens worden verwerkt..."):
-                                if bestaande_data:
-                                    requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
-                                    st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
-                                else:
-                                    requests.post(sheetdb_url, json={"data": resultaat})
-                                    st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
+                        requests.post(sheetdb_url, json={"data": resultaat})
+                        st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
 
-                                with st.expander("📋 Bekijk je ingediende gegevens"):
-                                    st.json(resultaat)
-                        except Exception as e:
-                            st.error(f"❌ Fout bij verzenden: {e}")
+                    with st.expander("📋 Bekijk je ingediende gegevens"):
+                        st.json(resultaat)
+            except Exception as e:
+                st.error(f"❌ Fout bij verzenden: {e}")
 
         except Exception as e:
             st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
