@@ -7,11 +7,6 @@ import matplotlib.pyplot as plt
 import hashlib
 import io
 from openpyxl import Workbook
-from datetime import datetime, timedelta
-
-def excel_serial_to_datetime(serial):
-    base_date = datetime(1899, 12, 30)  # Excel's startdatum
-    return base_date + timedelta(days=float(serial))
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
@@ -252,42 +247,32 @@ if not is_admin:
     if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
 
-   if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
-    try:
-        df_personeel = pd.read_csv(google_sheet_url, dtype=str)
-        df_personeel.columns = df_personeel.columns.str.strip().str.lower()
-        match = df_personeel[
-            (df_personeel["personeelsnummer"] == personeelsnummer) &
-            (df_personeel["controle"] == persoonlijke_code)
-        ]
+    if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
+        try:
+            df_personeel = pd.read_csv(google_sheet_url, dtype=str)
+            df_personeel.columns = df_personeel.columns.str.strip().str.lower()
+            match = df_personeel[
+                (df_personeel["personeelsnummer"] == personeelsnummer) &
+                (df_personeel["controle"] == persoonlijke_code)
+            ]
 
-        if match.empty:
-            st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
-        else:
-            naam = match.iloc[0]["naam"]
-            coach = match.iloc[0]["teamcoach"]
-            st.success(f"👋 Welkom terug, **{naam}**!")
+            if match.empty:
+                st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
+            else:
+                naam = match.iloc[0]["naam"]
+                coach = match.iloc[0]["teamcoach"]
+                st.success(f"👋 Welkom terug, **{naam}**!")
 
-            # Ophalen eerdere inzending
-            bestaande_data = None
-            eerder_voorkeuren = []
-            response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
-            gevonden = response_check.json()
-            if gevonden:
-                bestaande_data = gevonden[0]
-                eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
-    except Exception as e:
-        st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
-
-try:
-    laatst_float = float(laatst)
-    laatst_datetime = excel_serial_to_datetime(laatst_float)
-    laatst = laatst_datetime.strftime("%d/%m/%Y %H:%M:%S")
-except:
-    pass  # Laat originele waarde staan als conversie niet lukt
-
-st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
-
+                # Ophalen eerdere inzending
+                bestaande_data = None
+                eerder_voorkeuren = []
+                response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
+                gevonden = response_check.json()
+                if gevonden:
+                    bestaande_data = gevonden[0]
+                    eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
+                    laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
+                    st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
                 # Check op verouderde voorkeuren
                 ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
