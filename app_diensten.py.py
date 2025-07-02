@@ -266,13 +266,13 @@ if not is_admin:
     if match.empty:
         st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
     else:
-    naam = match.iloc[0]["naam"]
-    coach = match.iloc[0]["teamcoach"]
-    st.success(f"👋 Welkom terug, **{naam}**!")
+        naam = match.iloc[0]["naam"]
+        coach = match.iloc[0]["teamcoach"]
+        st.success(f"👋 Welkom terug, **{naam}**!")
 
-    # Ophalen eerdere inzending
-    bestaande_data = None
-    eerdere_voorkeuren = []
+        # Ophalen eerdere inzending
+        bestaande_data = None
+        eerdere_voorkeuren = []
 
     try:
         response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
