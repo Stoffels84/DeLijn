@@ -370,7 +370,7 @@ if not is_admin:
                         st.warning("Je nieuwe voorkeuren zijn identiek aan de vorige. Geen wijzigingen opgeslagen.")
                         st.stop()
 
-                       resultaat = {
+                           resultaat = {
                        "Personeelsnummer": personeelsnummer,
                        "Naam": naam,
                         "Teamcoach": coach,
