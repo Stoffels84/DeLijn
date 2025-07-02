@@ -370,15 +370,15 @@ if not is_admin:
                         st.warning("Je nieuwe voorkeuren zijn identiek aan de vorige. Geen wijzigingen opgeslagen.")
                         st.stop()
 
-                           resultaat = {
-                               "Personeelsnummer": personeelsnummer,
-                               "Naam": naam,
-                                "Teamcoach": coach,
-                                "Voorkeuren": ", ".join(volgorde),
-                                "Roostertype": ", ".join(gekozen_filters),
-                                "Bevestiging plaatsvoorkeur": "True",
-                                "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                                "Laatste aanpassing": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+                        resultaat = {
+                            "Personeelsnummer": personeelsnummer,
+                            "Naam": naam,
+                            "Teamcoach": coach,
+                            "Voorkeuren": ", ".join(volgorde),
+                            "Roostertype": ", ".join(gekozen_filters),
+                            "Bevestiging plaatsvoorkeur": "True",
+                            "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "Laatste aanpassing": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
                         }
 
                     try:
