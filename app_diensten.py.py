@@ -389,15 +389,15 @@ if not is_admin:
                                json={"data": resultaat}
                          )
                     st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
-                    else:
-                 requests.post(
-                     sheetdb_url,
-                    json={"data": resultaat}
-                    )
+                else:
+                    requests.post(
+                        sheetdb_url,
+                        json={"data": resultaat}
+                        )
                 st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
 
                 with st.expander("📋 Bekijk je ingediende gegevens"):
-                st.json(resultaat)
+                    st.json(resultaat)
 
 except Exception as e:
     st.error(f"❌ Fout bij verzenden: {e}")
