@@ -303,11 +303,11 @@ if not is_admin:
     eerdere_voorkeuren = [v for v in eerdere_voorkeuren if v in diensten]
 
 
-                # Stap 1: roostertypes kiezen
-                gekozen_types = st.multiselect(
-                    "Stap 1: Kies de type roosters waarin je diensten wilt selecteren",
-                    ["🚋 Tramdiensten", "🚌 Busdiensten", "🔀 Gemengde diensten"],
-                    default=["🚋 Tramdiensten"]
+        # Stap 1: roostertypes kiezen
+        gekozen_types = st.multiselect(
+            "Stap 1: Kies de type roosters waarin je diensten wilt selecteren",
+            ["🚋 Tramdiensten", "🚌 Busdiensten", "🔀 Gemengde diensten"],
+            default=["🚋 Tramdiensten"]
                 )
 
                 diensten_in_groep = []
