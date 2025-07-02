@@ -381,13 +381,13 @@ if not is_admin:
                             "Laatste aanpassing": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
                         }
 
-             try:
-                  with st.spinner("Gegevens worden verwerkt..."):
-                  if bestaande_data:
-                        requests.put(
-                         f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}",
-                        json={"data": resultaat}
-                     )
+                try:
+                    with st.spinner("Gegevens worden verwerkt..."):
+                        if bestaande_data:
+                            requests.put(
+                               f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}",
+                               json={"data": resultaat}
+                         )
                     st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
                     else:
                  requests.post(
