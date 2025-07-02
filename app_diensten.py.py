@@ -258,7 +258,7 @@ if not is_admin:
         try:
             df_personeel = pd.read_csv(google_sheet_url, dtype=str)
             df_personeel.columns = df_personeel.columns.str.strip().str.lower()
-        match = df_personeel[
+            match = df_personeel[
             (df_personeel["personeelsnummer"] == personeelsnummer) &
             (df_personeel["controle"] == persoonlijke_code)
         ]
