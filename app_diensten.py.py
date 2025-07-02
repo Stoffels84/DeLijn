@@ -1,19 +1,12 @@
 import streamlit as st
+from streamlit_sortables import sort_items
 import pandas as pd
 import requests
-from datetime import datetime, timedelta  # voeg timedelta hier toe
+from datetime import datetime
 import matplotlib.pyplot as plt
 import hashlib
 import io
 from openpyxl import Workbook
-
-# ✅ Toegevoegde functie direct na de imports
-def excel_serial_to_datetime(serial):
-    try:
-        serial = float(serial)
-        return (datetime(1899, 12, 30) + timedelta(days=serial)).strftime("%Y-%m-%d %H:%M:%S")
-    except:
-        return serial  # Laat originele waarde zien als conversie mislukt
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
@@ -254,148 +247,137 @@ if not is_admin:
     if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
 
-if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
-    try:
-        df_personeel = pd.read_csv(google_sheet_url, dtype=str)
-        df_personeel.columns = df_personeel.columns.str.strip().str.lower()
-        
-        match = df_personeel[
-            (df_personeel["personeelsnummer"] == personeelsnummer) &
-            (df_personeel["controle"] == persoonlijke_code)
-        ]
+    if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and len(persoonlijke_code) == 4:
+        try:
+            df_personeel = pd.read_csv(google_sheet_url, dtype=str)
+            df_personeel.columns = df_personeel.columns.str.strip().str.lower()
+            match = df_personeel[
+                (df_personeel["personeelsnummer"] == personeelsnummer) &
+                (df_personeel["controle"] == persoonlijke_code)
+            ]
 
-        if match.empty:
-            st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
-        else:
-            naam = match.iloc[0]["naam"]
-            coach = match.iloc[0]["teamcoach"]
-            st.success(f"👋 Welkom terug, **{naam}**!")
+            if match.empty:
+                st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
+            else:
+                naam = match.iloc[0]["naam"]
+                coach = match.iloc[0]["teamcoach"]
+                st.success(f"👋 Welkom terug, **{naam}**!")
 
-            # Ophalen eerdere inzending
-            bestaande_data = None
-            eerdere_voorkeuren = []
-
-            try:
-                response_check = requests.get(f"{sheetdb_url}/search?personeelsnummer={personeelsnummer}")
+                # Ophalen eerdere inzending
+                bestaande_data = None
+                eerder_voorkeuren = []
+                response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
                 gevonden = response_check.json()
-
                 if gevonden:
                     bestaande_data = gevonden[0]
-                    eerdere_voorkeuren = [
-                        v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()
+                    eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
+                    laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
+                    st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
+
+                # Check op verouderde voorkeuren
+                ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
+                if ongeldige:
+                    st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
+                eerder_voorkeuren = [v for v in eerder_voorkeuren if v in diensten]
+
+                # Stap 1: roostertypes kiezen
+                gekozen_types = st.multiselect(
+                    "Stap 1: Kies de type roosters waarin je diensten wilt selecteren",
+                    ["🚋 Tramdiensten", "🚌 Busdiensten", "🔀 Gemengde diensten"],
+                    default=["🚋 Tramdiensten"]
+                )
+
+                diensten_in_groep = []
+                gekozen_filters = []
+
+                if "🚋 Tramdiensten" in gekozen_types:
+                    st.markdown("#### 🚋 Filter tramdiensten")
+                    roosters_tram = st.multiselect("Kies één of meerdere tramroosters", sorted(set(d.split(" ")[0] for d in diensten_tram)), key="roosters_tram")
+                    groepen_tram = st.multiselect("Kies één of meerdere tramgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_tram")
+                    gefilterd = [
+                        d for d in diensten_tram
+                        if any(d.startswith(r) for r in roosters_tram) and any(g in d for g in groepen_tram)
                     ]
-            except Exception as e:
-                st.error(f"❌ Fout bij ophalen eerdere voorkeuren: {e}")
 
-    except Exception as e:
-        st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
-        st.stop()
+                    diensten_in_groep += gefilterd
+                    gekozen_filters.extend([f"{r} {g} (Tram)" for r in roosters_tram for g in groepen_tram])
 
+                if "🚌 Busdiensten" in gekozen_types:
+                    st.markdown("#### 🚌 Filter busdiensten")
+                    roosters_bus = st.multiselect("Kies één of meerdere busroosters", sorted(set(d.split(" ")[0] for d in diensten_bus)), key="roosters_bus")
+                    groepen_bus = st.multiselect("Kies één of meerdere busgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_bus")
+                    gefilterd = [
+                        d for d in diensten_bus
+                        if any(d.startswith(r) for r in roosters_bus) and any(g in d for g in groepen_bus)
+                    ]
 
-    # Check op verouderde voorkeuren
-    ongeldige = [v for v in eerdere_voorkeuren if v not in diensten]
-    if ongeldige:
-        st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
-    eerdere_voorkeuren = [v for v in eerdere_voorkeuren if v in diensten]
+                    diensten_in_groep += gefilterd
+                    gekozen_filters.extend([f"{r} {g} (Bus)" for r in roosters_bus for g in groepen_bus])
 
+                if "🔀 Gemengde diensten" in gekozen_types:
+                    st.markdown("#### 🔀 Filter gemengde diensten")
+                    roosters_mix = st.multiselect("Kies één of meerdere gemengde roosters", sorted(set(d.split(" ")[0] for d in diensten_gemengd)), key="roosters_mix")
+                    groepen_mix = st.multiselect("Kies één of meerdere gemengde groepen", [f"groep{i}" for i in range(1, 7)], key="groepen_mix")
+                    gefilterd = [
+                        d for d in diensten_gemengd
+                        if any(d.startswith(r) for r in roosters_mix) and any(g in d for g in groepen_mix)
+                    ]
 
-    # Stap 1: roostertypes kiezen
-    gekozen_types = st.multiselect(
-        "Stap 1: Kies de type roosters waarin je diensten wilt selecteren",
-        ["🚋 Tramdiensten", "🚌 Busdiensten", "🔀 Gemengde diensten"],
-        default=["🚋 Tramdiensten"]
-    )
+                    diensten_in_groep += gefilterd
+                    gekozen_filters.extend([f"{r} {g} (Gemengd)" for r in roosters_mix for g in groepen_mix])
 
-    diensten_in_groep = []
-    gekozen_filters = []
+                diensten_in_groep = sorted(set(diensten_in_groep))
+                eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
 
-    if "🚋 Tramdiensten" in gekozen_types:
-        st.markdown("#### 🚋 Filter tramdiensten")
-        roosters_tram = st.multiselect("Kies één of meerdere tramroosters", sorted(set(d.split(" ")[0] for d in diensten_tram)), key="roosters_tram")
-        groepen_tram = st.multiselect("Kies één of meerdere tramgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_tram")
-        gefilterd = [
-            d for d in diensten_tram
-            if any(d.startswith(r) for r in roosters_tram) and any(g in d for g in groepen_tram)
-        ]
+                # Stap 2: voorkeuren kiezen + slepen
+                geselecteerd = st.multiselect(
+                    "Stap 2: Selecteer je voorkeuren binnen deze roosters:",
+                    opties := diensten_in_groep,
+                    default=eerder_in_groep
+                )
 
-        diensten_in_groep += gefilterd
-        gekozen_filters.extend([f"{r} {g} (Tram)" for r in roosters_tram for g in groepen_tram])
-
-    if "🚌 Busdiensten" in gekozen_types:
-        st.markdown("#### 🚌 Filter busdiensten")
-        roosters_bus = st.multiselect("Kies één of meerdere busroosters", sorted(set(d.split(" ")[0] for d in diensten_bus)), key="roosters_bus")
-        groepen_bus = st.multiselect("Kies één of meerdere busgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_bus")
-        gefilterd = [
-            d for d in diensten_bus
-            if any(d.startswith(r) for r in roosters_bus) and any(g in d for g in groepen_bus)
-        ]
-
-        diensten_in_groep += gefilterd
-        gekozen_filters.extend([f"{r} {g} (Bus)" for r in roosters_bus for g in groepen_bus])
-
-    if "🔀 Gemengde diensten" in gekozen_types:
-        st.markdown("#### 🔀 Filter gemengde diensten")
-        roosters_mix = st.multiselect("Kies één of meerdere gemengde roosters", sorted(set(d.split(" ")[0] for d in diensten_gemengd)), key="roosters_mix")
-        groepen_mix = st.multiselect("Kies één of meerdere gemengde groepen", [f"groep{i}" for i in range(1, 7)], key="groepen_mix")
-        gefilterd = [
-            d for d in diensten_gemengd
-            if any(d.startswith(r) for r in roosters_mix) and any(g in d for g in groepen_mix)
-        ]
-
-        diensten_in_groep += gefilterd
-        gekozen_filters.extend([f"{r} {g} (Gemengd)" for r in roosters_mix for g in groepen_mix])
-
-    diensten_in_groep = sorted(set(diensten_in_groep))
-    eerdere_voorkeuren = []  # of gevuld via eerdere API-call
-    eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
-
-     # Stap 2: voorkeuren kiezen + slepen
-    geselecteerd = st.multiselect(
-        "Stap 2: Selecteer je voorkeuren binnen deze roosters:",
-        diensten_in_groep,
-        default=eerder_in_groep
-    )
-
-    volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_in_groep
-    if set(volgorde) != set(geselecteerd):
+                volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_in_groep
+                if set(volgorde) != set(geselecteerd):
                     volgorde = geselecteerd
 
-    if volgorde:
-        st.subheader("Jouw voorkeursvolgorde:")
-        for i, dienst in enumerate(volgorde, start=1):
-            st.write(f"{i}. {dienst}")
-    else:
-        st.info("Selecteer eerst één of meerdere diensten.")
+                if volgorde:
+                    st.subheader("Jouw voorkeursvolgorde:")
+                    for i, dienst in enumerate(volgorde, start=1):
+                        st.write(f"{i}. {dienst}")
+                else:
+                    st.info("Selecteer eerst één of meerdere diensten.")
 
-    bevestigd = st.checkbox("Ik bevestig mijn voorkeur en ga akkoord met automatische toewijzing bij wijzigingen.")
+                bevestigd = st.checkbox("Ik bevestig mijn voorkeur en ga akkoord met automatische toewijzing bij wijzigingen.")
 
-    if st.button("Verzend je antwoorden"):
-        if not bevestigd:
-            st.error("❌ Bevestig je voorkeur eerst.")
-        elif not volgorde:
+                if st.button("Verzend je antwoorden"):
+                    if not bevestigd:
+                        st.error("❌ Bevestig je voorkeur eerst.")
+                    elif not volgorde:
                         st.error("❌ Selecteer minstens één dienst.")
-        else:
-            resultaat = {
-                "Personeelsnummer": personeelsnummer,
-                "Naam": naam,
-                "Teamcoach": coach,
-                "Voorkeuren": ", ".join(volgorde),
-                "Roostertype": ", ".join(gekozen_filters),
-                "Bevestiging plaatsvoorkeur": "True",
-                "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }
-            try:
-                with st.spinner("Gegevens worden verwerkt..."):
-                    if bestaande_data:
-                        requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
-                        st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
                     else:
-                        requests.post(sheetdb_url, json={"data": resultaat})
-                        st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
+                        resultaat = {
+                            "Personeelsnummer": personeelsnummer,
+                            "Naam": naam,
+                            "Teamcoach": coach,
+                            "Voorkeuren": ", ".join(volgorde),
+                            "Roostertype": ", ".join(gekozen_filters),
+                            "Bevestiging plaatsvoorkeur": "True",
+                            "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        }
+                        try:
+                            with st.spinner("Gegevens worden verwerkt..."):
+                                if bestaande_data:
+                                    requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
+                                    st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
+                                else:
+                                    requests.post(sheetdb_url, json={"data": resultaat})
+                                    st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
 
-                    with st.expander("📋 Bekijk je ingediende gegevens"):
-                        st.json(resultaat)
-            except Exception as e:
-                st.error(f"❌ Fout bij verzenden: {e}")
+                                with st.expander("📋 Bekijk je ingediende gegevens"):
+                                    st.json(resultaat)
+                        except Exception as e:
+                            st.error(f"❌ Fout bij verzenden: {e}")
 
+        except Exception as e:
+            st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
