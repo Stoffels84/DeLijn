@@ -296,8 +296,9 @@ if not is_admin:
                     groepen_tram = st.multiselect("Kies één of meerdere tramgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_tram")
                     gefilterd = [
                         d for d in diensten_tram
-                        if any(r in d for r in roosters_tram) and any(g in d for g in groepen_tram)
+                        if any(d.startswith(r) for r in roosters_tram) and any(g in d for g in groepen_tram)
                     ]
+
                     diensten_in_groep += gefilterd
                     gekozen_filters.extend([f"{r} {g} (Tram)" for r in roosters_tram for g in groepen_tram])
 
@@ -307,8 +308,9 @@ if not is_admin:
                     groepen_bus = st.multiselect("Kies één of meerdere busgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_bus")
                     gefilterd = [
                         d for d in diensten_bus
-                        if any(r in d for r in roosters_bus) and any(g in d for g in groepen_bus)
+                        if any(d.startswith(r) for r in roosters_bus) and any(g in d for g in groepen_bus)
                     ]
+
                     diensten_in_groep += gefilterd
                     gekozen_filters.extend([f"{r} {g} (Bus)" for r in roosters_bus for g in groepen_bus])
 
@@ -318,8 +320,9 @@ if not is_admin:
                     groepen_mix = st.multiselect("Kies één of meerdere gemengde groepen", [f"groep{i}" for i in range(1, 7)], key="groepen_mix")
                     gefilterd = [
                         d for d in diensten_gemengd
-                        if any(r in d for r in roosters_mix) and any(g in d for g in groepen_mix)
+                        if any(d.startswith(r) for r in roosters_mix) and any(g in d for g in groepen_mix)
                     ]
+
                     diensten_in_groep += gefilterd
                     gekozen_filters.extend([f"{r} {g} (Gemengd)" for r in roosters_mix for g in groepen_mix])
 
