@@ -274,16 +274,16 @@ if not is_admin:
                 bestaande_data = None
                 eerdere_voorkeuren = []
 
-response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
-gevonden = response_check.json()
+            response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
+                gevonden = response_check.json()
 
-if gevonden:
-    bestaande_data = gevonden[0]
-    eerdere_voorkeuren = [
-        v.strip()
-        for v in bestaande_data.get("Voorkeuren", "").split(",")
-        if v.strip()
-    ]
+            if gevonden:
+                bestaande_data = gevonden[0]
+                eerdere_voorkeuren = [
+                v.strip()
+                for v in bestaande_data.get("Voorkeuren", "").split(",")
+                if v.strip()
+            ]
 
     laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
     laatst = excel_serial_to_datetime(laatst_raw)
