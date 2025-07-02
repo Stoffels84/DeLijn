@@ -288,7 +288,8 @@ if not is_admin:
                 laatst = excel_serial_to_datetime(laatst_raw)
                 st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
-
+                except Exception as e:
+                st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
 
                 # Check op verouderde voorkeuren
                 ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
