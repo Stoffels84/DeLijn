@@ -402,6 +402,3 @@ if not is_admin:
             except Exception as e:
                 st.error(f"❌ Fout bij verzenden: {e}")
 
-        except Exception as e:
-            st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
-
