@@ -238,11 +238,16 @@ if not is_admin:
 
     st.markdown("<h1 style='color: #DAA520;'>Maak je keuze: dienstrollen</h1>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
+    if st.session_state.get("is_mobile"):
         personeelsnummer = st.text_input("Personeelsnummer")
-    with col2:
         persoonlijke_code = st.text_input("Persoonlijke code = laatste 4 cijfers rijksregisternummer", type="password")
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            personeelsnummer = st.text_input("Personeelsnummer")
+        with col2:
+            persoonlijke_code = st.text_input("Persoonlijke code = laatste 4 cijfers rijksregisternummer", type="password")
+
 
     if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
