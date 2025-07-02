@@ -350,10 +350,12 @@ if not is_admin:
                 bevestigd = st.checkbox("Ik bevestig mijn voorkeur en ga akkoord met automatische toewijzing bij wijzigingen.")
 
                 if st.button("Verzend je antwoorden"):
+                    if not volgorde:
+                        st.error("❌ Selecteer minstens één dienst.")
+                        st.stop()
                     if not bevestigd:
                         st.error("❌ Bevestig je voorkeur eerst.")
-                    elif not volgorde:
-                        st.error("❌ Selecteer minstens één dienst.")
+                        st.stop()
                     else:
                         resultaat = {
                             "Personeelsnummer": personeelsnummer,
