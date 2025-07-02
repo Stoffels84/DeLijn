@@ -242,7 +242,7 @@ if not is_admin:
     with col1:
         personeelsnummer = st.text_input("Personeelsnummer")
     with col2:
-        persoonlijke_code = st.text_input("Persoonlijke code (4 cijfers)", type="password")
+        persoonlijke_code = st.text_input("Persoonlijke code = laatste 4 cijfers rijksregisternummer", type="password")
 
     if persoonlijke_code and (not persoonlijke_code.isdigit() or len(persoonlijke_code) != 4):
         st.warning("De persoonlijke code moet exact 4 cijfers bevatten.")
