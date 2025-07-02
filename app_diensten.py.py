@@ -382,25 +382,30 @@ if not is_admin:
                         }
 
                 try:
-                    with st.spinner("Gegevens worden verwerkt..."):
-                        if bestaande_data:
-                            requests.put(
-                               f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}",
-                               json={"data": resultaat}
+                        with st.spinner("Gegevens worden verwerkt..."):
+                           if bestaande_data:
+                                requests.put(
+                                    f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}",
+                                    json={"data": resultaat}
                          )
                         st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
-                  
+                      else:
                         requests.post(
                             sheetdb_url,
                             json={"data": resultaat}
-                         )
-            st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
+                        )
+                        st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
+                    with st.expander("📄 Bekijk je ingediende gegevens"):
+                        st.json(resultaat)
 
-        with st.expander("📄 Bekijk je ingediende gegevens"):
-            st.json(resultaat)
+         except Exception as e:
+                 st.error(f"❌ Fout bij verzenden: {e}")
 
-except Exception as e:
-    st.error(f"❌ Fout bij verzenden: {e}")
+                    with st.expander("📄 Bekijk je ingediende gegevens"):
+                        st.json(resultaat)
+
+        except Exception as e:
+             st.error(f"❌ Fout bij verzenden: {e}")
 
 
         except Exception as e:
