@@ -277,9 +277,7 @@ if not is_admin:
                     bestaande_data = gevonden[0]
                     eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
                     # ===== Hulpfunctie: Excel-waarde omzetten naar datum =====
-def excel_serial_to_datetime(serial):
-    base_date = datetime(1899, 12, 30)  # Excel's startdatum
-    return base_date + timedelta(days=float(serial))
+
 
 # ===== Laatste wijziging netjes weergeven =====
 laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
