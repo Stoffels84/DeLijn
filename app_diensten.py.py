@@ -1,12 +1,19 @@
 import streamlit as st
-from streamlit_sortables import sort_items
 import pandas as pd
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta  # voeg timedelta hier toe
 import matplotlib.pyplot as plt
 import hashlib
 import io
 from openpyxl import Workbook
+
+# ✅ Toegevoegde functie direct na de imports
+def excel_serial_to_datetime(serial):
+    try:
+        serial = float(serial)
+        return (datetime(1899, 12, 30) + timedelta(days=serial)).strftime("%Y-%m-%d %H:%M:%S")
+    except:
+        return serial  # Laat originele waarde zien als conversie mislukt
 
 # ====== Configuratie ======
 sheetdb_url = "https://sheetdb.io/api/v1/r0nrllqfrw8v6"
@@ -265,23 +272,24 @@ if not is_admin:
 
                 # Ophalen eerdere inzending
                 bestaande_data = None
-                eerder_voorkeuren = []
-                response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
-                gevonden = response_check.json()
-                if gevonden:
-                    bestaande_data = gevonden[0]
-                    eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
-                    from datetime import datetime, timedelta
-                    def excel_serial_to_datetime(serial):
-                        try:
-                            serial = float(serial)
-                            return (datetime(1899, 12, 30) + timedelta(days=serial)).strftime("%Y-%m-%d %H:%M:%S")
-                    except:
-                            return serial  # laat originele waarde zien als het niet lukt
+                eerdere_voorkeuren = []
 
-laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
-laatst = excel_serial_to_datetime(laatst_raw)
-st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
+response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
+gevonden = response_check.json()
+
+if gevonden:
+    bestaande_data = gevonden[0]
+    eerdere_voorkeuren = [
+        v.strip()
+        for v in bestaande_data.get("Voorkeuren", "").split(",")
+        if v.strip()
+    ]
+
+    laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
+    laatst = excel_serial_to_datetime(laatst_raw)
+
+    st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
+
 
 
                 # Check op verouderde voorkeuren
