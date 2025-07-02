@@ -325,39 +325,39 @@ if not is_admin:
         diensten_in_groep += gefilterd
         gekozen_filters.extend([f"{r} {g} (Tram)" for r in roosters_tram for g in groepen_tram])
 
-                if "🚌 Busdiensten" in gekozen_types:
-                    st.markdown("#### 🚌 Filter busdiensten")
-                    roosters_bus = st.multiselect("Kies één of meerdere busroosters", sorted(set(d.split(" ")[0] for d in diensten_bus)), key="roosters_bus")
-                    groepen_bus = st.multiselect("Kies één of meerdere busgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_bus")
-                    gefilterd = [
-                        d for d in diensten_bus
-                        if any(d.startswith(r) for r in roosters_bus) and any(g in d for g in groepen_bus)
-                    ]
+    if "🚌 Busdiensten" in gekozen_types:
+        st.markdown("#### 🚌 Filter busdiensten")
+        roosters_bus = st.multiselect("Kies één of meerdere busroosters", sorted(set(d.split(" ")[0] for d in diensten_bus)), key="roosters_bus")
+        groepen_bus = st.multiselect("Kies één of meerdere busgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_bus")
+        gefilterd = [
+            d for d in diensten_bus
+            if any(d.startswith(r) for r in roosters_bus) and any(g in d for g in groepen_bus)
+        ]
 
-                    diensten_in_groep += gefilterd
-                    gekozen_filters.extend([f"{r} {g} (Bus)" for r in roosters_bus for g in groepen_bus])
+        diensten_in_groep += gefilterd
+        gekozen_filters.extend([f"{r} {g} (Bus)" for r in roosters_bus for g in groepen_bus])
 
-                if "🔀 Gemengde diensten" in gekozen_types:
-                    st.markdown("#### 🔀 Filter gemengde diensten")
-                    roosters_mix = st.multiselect("Kies één of meerdere gemengde roosters", sorted(set(d.split(" ")[0] for d in diensten_gemengd)), key="roosters_mix")
-                    groepen_mix = st.multiselect("Kies één of meerdere gemengde groepen", [f"groep{i}" for i in range(1, 7)], key="groepen_mix")
-                    gefilterd = [
-                        d for d in diensten_gemengd
-                        if any(d.startswith(r) for r in roosters_mix) and any(g in d for g in groepen_mix)
-                    ]
+    if "🔀 Gemengde diensten" in gekozen_types:
+        st.markdown("#### 🔀 Filter gemengde diensten")
+        roosters_mix = st.multiselect("Kies één of meerdere gemengde roosters", sorted(set(d.split(" ")[0] for d in diensten_gemengd)), key="roosters_mix")
+        groepen_mix = st.multiselect("Kies één of meerdere gemengde groepen", [f"groep{i}" for i in range(1, 7)], key="groepen_mix")
+        gefilterd = [
+            d for d in diensten_gemengd
+            if any(d.startswith(r) for r in roosters_mix) and any(g in d for g in groepen_mix)
+        ]
 
-                    diensten_in_groep += gefilterd
-                    gekozen_filters.extend([f"{r} {g} (Gemengd)" for r in roosters_mix for g in groepen_mix])
+        diensten_in_groep += gefilterd
+        gekozen_filters.extend([f"{r} {g} (Gemengd)" for r in roosters_mix for g in groepen_mix])
 
-                diensten_in_groep = sorted(set(diensten_in_groep))
-                eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
+    diensten_in_groep = sorted(set(diensten_in_groep))
+    eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
 
-                # Stap 2: voorkeuren kiezen + slepen
-                geselecteerd = st.multiselect(
-                    "Stap 2: Selecteer je voorkeuren binnen deze roosters:",
-                    opties := diensten_in_groep,
-                    default=eerder_in_groep
-                )
+     # Stap 2: voorkeuren kiezen + slepen
+    geselecteerd = st.multiselect(
+        Stap 2: Selecteer je voorkeuren binnen deze roosters:",
+        opties := diensten_in_groep,
+        default=eerder_in_groep
+    )
 
                 volgorde = sort_items(geselecteerd, direction="vertical") if geselecteerd else eerder_in_groep
                 if set(volgorde) != set(geselecteerd):
