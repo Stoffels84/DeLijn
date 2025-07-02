@@ -393,15 +393,6 @@ if not is_admin:
                        with st.expander("📋 Bekijk je ingediende gegevens"):
                             st.json(resultaat)
 
-
-                                
-                          if bestaande_data:
-                                requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
-                                st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
-                          else:
-                                requests.post(sheetdb_url, json={"data": resultaat})
-                                st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
-
                         with st.expander("📋 Bekijk je ingediende gegevens"):
                                 st.json(resultaat)
                         except Exception as e:
