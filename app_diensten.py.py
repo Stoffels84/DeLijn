@@ -313,17 +313,17 @@ if not is_admin:
     diensten_in_groep = []
     gekozen_filters = []
 
-                if "🚋 Tramdiensten" in gekozen_types:
-                    st.markdown("#### 🚋 Filter tramdiensten")
-                    roosters_tram = st.multiselect("Kies één of meerdere tramroosters", sorted(set(d.split(" ")[0] for d in diensten_tram)), key="roosters_tram")
-                    groepen_tram = st.multiselect("Kies één of meerdere tramgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_tram")
-                    gefilterd = [
-                        d for d in diensten_tram
-                        if any(d.startswith(r) for r in roosters_tram) and any(g in d for g in groepen_tram)
-                    ]
+    if "🚋 Tramdiensten" in gekozen_types:
+        st.markdown("#### 🚋 Filter tramdiensten")
+        roosters_tram = st.multiselect("Kies één of meerdere tramroosters", sorted(set(d.split(" ")[0] for d in diensten_tram)), key="roosters_tram")
+        groepen_tram = st.multiselect("Kies één of meerdere tramgroepen", [f"groep{i}" for i in range(1, 7)], key="groepen_tram")
+        gefilterd = [
+            d for d in diensten_tram
+            if any(d.startswith(r) for r in roosters_tram) and any(g in d for g in groepen_tram)
+        ]
 
-                    diensten_in_groep += gefilterd
-                    gekozen_filters.extend([f"{r} {g} (Tram)" for r in roosters_tram for g in groepen_tram])
+        diensten_in_groep += gefilterd
+        gekozen_filters.extend([f"{r} {g} (Tram)" for r in roosters_tram for g in groepen_tram])
 
                 if "🚌 Busdiensten" in gekozen_types:
                     st.markdown("#### 🚌 Filter busdiensten")
