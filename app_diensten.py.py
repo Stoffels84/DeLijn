@@ -263,9 +263,9 @@ if not is_admin:
                 (df_personeel["controle"] == persoonlijke_code)
             ]
 
-           if match.empty:
-    st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
-else:
+    if match.empty:
+        st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
+    else:
     naam = match.iloc[0]["naam"]
     coach = match.iloc[0]["teamcoach"]
     st.success(f"👋 Welkom terug, **{naam}**!")
