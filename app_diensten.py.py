@@ -310,8 +310,8 @@ if not is_admin:
         default=["🚋 Tramdiensten"]
     )
 
-        diensten_in_groep = []
-        gekozen_filters = []
+    diensten_in_groep = []
+    gekozen_filters = []
 
                 if "🚋 Tramdiensten" in gekozen_types:
                     st.markdown("#### 🚋 Filter tramdiensten")
