@@ -263,36 +263,41 @@ if not is_admin:
                 (df_personeel["controle"] == persoonlijke_code)
             ]
 
-            if match.empty:
-                st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
-            else:
-                naam = match.iloc[0]["naam"]
-                coach = match.iloc[0]["teamcoach"]
-                st.success(f"👋 Welkom terug, **{naam}**!")
+           if match.empty:
+    st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
+else:
+    naam = match.iloc[0]["naam"]
+    coach = match.iloc[0]["teamcoach"]
+    st.success(f"👋 Welkom terug, **{naam}**!")
 
-                # Ophalen eerdere inzending
-                bestaande_data = None
-                eerdere_voorkeuren = []
-            
-                response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
-                gevonden = response_check.json()
+    # Ophalen eerdere inzending
+    bestaande_data = None
+    eerdere_voorkeuren = []
 
-            if gevonden:
-                bestaande_data = gevonden[0]
-                eerdere_voorkeuren = [
+    try:
+        response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
+        gevonden = response_check.json()
+
+        if gevonden:
+            bestaande_data = gevonden[0]
+            eerdere_voorkeuren = [
                 v.strip()
                 for v in bestaande_data.get("Voorkeuren", "").split(",")
                 if v.strip()
             ]
-                laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
-                laatst = excel_serial_to_datetime(laatst_raw)
-                st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
+            laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
+            laatst = excel_serial_to_datetime(laatst_raw)
+            st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
-                # Check op verouderde voorkeuren
-                ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
-                if ongeldige:
-                    st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
-                eerder_voorkeuren = [v for v in eerder_voorkeuren if v in diensten]
+    except Exception as e:
+        st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
+
+    # Check op verouderde voorkeuren
+    ongeldige = [v for v in eerdere_voorkeuren if v not in diensten]
+    if ongeldige:
+        st.warning(f"⚠️ Volgende oude voorkeuren bestaan niet meer: {ongeldige}")
+    eerdere_voorkeuren = [v for v in eerdere_voorkeuren if v in diensten]
+
 
                 # Stap 1: roostertypes kiezen
                 gekozen_types = st.multiselect(
