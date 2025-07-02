@@ -262,7 +262,7 @@ if not is_admin:
             (df_personeel["personeelsnummer"] == personeelsnummer) &
             (df_personeel["controle"] == persoonlijke_code)
         ]
-    except Exception as e:
+        except Exception as e:
         st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
         st.stop()  # Stop het script als het fout gaat
 
