@@ -365,19 +365,36 @@ if not is_admin:
                     if not bevestigd:
                         st.error("❌ Bevestig je voorkeur eerst.")
                         st.stop()
-                    else:
-                        resultaat = {
-                            "Personeelsnummer": personeelsnummer,
-                            "Naam": naam,
-                            "Teamcoach": coach,
-                            "Voorkeuren": ", ".join(volgorde),
-                            "Roostertype": ", ".join(gekozen_filters),
-                            "Bevestiging plaatsvoorkeur": "True",
-                            "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            "Laatste aanpassing": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+
+                    if bestaande_data and bestaande_data.get("Voorkeuren", "") == ", ".join(volgorde):
+                        st.warning("Je nieuwe voorkeuren zijn identiek aan de vorige. Geen wijzigingen opgeslagen.")
+                        st.stop()
+
+                   resultaat = {
+                       "Personeelsnummer": personeelsnummer,
+                       "Naam": naam,
+                        "Teamcoach": coach,
+                        "Voorkeuren": ", ".join(volgorde),
+                        "Roostertype": ", ".join(gekozen_filters),
+                        "Bevestiging plaatsvoorkeur": "True",
+                        "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "Laatste aanpassing": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
                         }
-                        try:
-                            with st.spinner("Gegevens worden verwerkt..."):
+
+                    try:
+                        with st.spinner("Gegevens worden verwerkt..."):
+                            if bestaande_data:
+                            requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
+                            st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
+                        else:
+                            requests.post(sheetdb_url, json={"data": resultaat})
+                            st.success(f"✅ Bedankt {naam}, je voorkeuren zijn succesvol ingediend.")
+
+                       with st.expander("📋 Bekijk je ingediende gegevens"):
+                            st.json(resultaat)
+
+
+                                
                                 if bestaande_data:
                                     requests.put(f"{sheetdb_url}/Personeelsnummer/{personeelsnummer}", json={"data": resultaat})
                                     st.success(f"✅ Voorkeuren van {naam} succesvol bijgewerkt.")
