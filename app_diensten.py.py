@@ -271,8 +271,22 @@ if not is_admin:
                 if gevonden:
                     bestaande_data = gevonden[0]
                     eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
-                    laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
-                    st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
+                    # ===== Hulpfunctie: Excel-waarde omzetten naar datum =====
+def excel_serial_to_datetime(serial):
+    base_date = datetime(1899, 12, 30)  # Excel's startdatum
+    return base_date + timedelta(days=float(serial))
+
+# ===== Laatste wijziging netjes weergeven =====
+laatst = bestaande_data.get("Laatste aanpassing", "onbekend")
+try:
+    laatst_float = float(laatst)
+    laatst_datetime = excel_serial_to_datetime(laatst_float)
+    laatst = laatst_datetime.strftime("%Y-%m-%d %H:%M:%S")
+except:
+    pass  # Laat originele waarde staan als conversie niet lukt
+
+st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
+
 
                 # Check op verouderde voorkeuren
                 ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
