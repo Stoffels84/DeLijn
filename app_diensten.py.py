@@ -273,11 +273,11 @@ if not is_admin:
                     eerder_voorkeuren = [v.strip() for v in bestaande_data.get("Voorkeuren", "").split(",") if v.strip()]
                     from datetime import datetime, timedelta
                     def excel_serial_to_datetime(serial):
-                    try:
-                    serial = float(serial)
-                    return (datetime(1899, 12, 30) + timedelta(days=serial)).strftime("%Y-%m-%d %H:%M:%S")
+                        try:
+                            serial = float(serial)
+                            return (datetime(1899, 12, 30) + timedelta(days=serial)).strftime("%Y-%m-%d %H:%M:%S")
                     except:
-                    return serial  # laat originele waarde zien als het niet lukt
+                            return serial  # laat originele waarde zien als het niet lukt
 
 laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
 laatst = excel_serial_to_datetime(laatst_raw)
