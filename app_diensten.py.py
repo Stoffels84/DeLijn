@@ -346,6 +346,7 @@ if personeelsnummer and persoonlijke_code and persoonlijke_code.isdigit() and le
         gekozen_filters.extend([f"{r} {g} (Gemengd)" for r in roosters_mix for g in groepen_mix])
 
     diensten_in_groep = sorted(set(diensten_in_groep))
+    eerdere_voorkeuren = []  # of gevuld via eerdere API-call
     eerder_in_groep = [v for v in eerder_voorkeuren if v in diensten_in_groep]
 
      # Stap 2: voorkeuren kiezen + slepen
