@@ -262,16 +262,16 @@ if not is_admin:
         (df_personeel["personeelsnummer"] == personeelsnummer) &
         (df_personeel["controle"] == persoonlijke_code)
     ]
-except Exception as e:
-    st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
-    st.stop()  # Stop het script als het fout gaat
+    except Exception as e:
+        st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
+        st.stop()  # Stop het script als het fout gaat
 
-if match.empty:
-    st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
-else:
-    naam = match.iloc[0]["naam"]
-    coach = match.iloc[0]["teamcoach"]
-    st.success(f"👋 Welkom terug, **{naam}**!")
+    if match.empty:
+        st.warning("⚠️ Combinatie van personeelsnummer en code niet gevonden.")
+    else:
+        naam = match.iloc[0]["naam"]
+        coach = match.iloc[0]["teamcoach"]
+        st.success(f"👋 Welkom terug, **{naam}**!")
 
 
         # Ophalen eerdere inzending
