@@ -275,7 +275,7 @@ if not is_admin:
                 eerdere_voorkeuren = []
 
             response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
-                gevonden = response_check.json()
+            gevonden = response_check.json()
 
             if gevonden:
                 bestaande_data = gevonden[0]
