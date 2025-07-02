@@ -363,7 +363,7 @@ if not is_admin:
                             "Roostertype": ", ".join(gekozen_filters),
                             "Bevestiging plaatsvoorkeur": "True",
                             "Ingevuld op": bestaande_data.get("Ingevuld op", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if bestaande_data else datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            "Laatste aanpassing": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            "Laatste aanpassing": datetime.now().strftime("%d-%m-%Y %H:%M:%S")
                         }
                         try:
                             with st.spinner("Gegevens worden verwerkt..."):
