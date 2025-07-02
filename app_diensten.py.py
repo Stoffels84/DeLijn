@@ -273,7 +273,7 @@ if not is_admin:
                 # Ophalen eerdere inzending
                 bestaande_data = None
                 eerdere_voorkeuren = []
-            try:
+            
                 response_check = requests.get(f"{sheetdb_url}/search?Personeelsnummer={personeelsnummer}")
                 gevonden = response_check.json()
 
@@ -287,9 +287,6 @@ if not is_admin:
                 laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
                 laatst = excel_serial_to_datetime(laatst_raw)
                 st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
-
-                except Exception as e:
-                st.error(f"❌ Fout bij laden van personeelsgegevens: {e}")
 
                 # Check op verouderde voorkeuren
                 ongeldige = [v for v in eerder_voorkeuren if v not in diensten]
