@@ -285,10 +285,10 @@ if not is_admin:
                 if v.strip()
             ]
 
-    laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
-    laatst = excel_serial_to_datetime(laatst_raw)
+                laatst_raw = bestaande_data.get("Laatste aanpassing", "onbekend")
+                laatst = excel_serial_to_datetime(laatst_raw)
 
-    st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
+                st.info(f"Eerdere inzending gevonden. Laatste wijziging op: **{laatst}**")
 
 
 
